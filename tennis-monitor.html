@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Liga-Monitor · Tennisgruppe 65</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    min-height: 100vh;
+    background: #0f1923;
+    color: #e0e8f0;
+    font-family: 'Georgia', 'Times New Roman', serif;
+    padding: 32px 24px;
+  }
+
+  header {
+    margin-bottom: 36px;
+    border-bottom: 1px solid #1e3a4a;
+    padding-bottom: 20px;
+  }
+
+  header .eyebrow {
+    font-size: 11px;
+    color: #4a7090;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  header h1 {
+    font-size: 26px;
+    font-weight: 400;
+    color: #c8dff0;
+    letter-spacing: -0.01em;
+  }
+
+  header p {
+    margin-top: 8px;
+    font-size: 13px;
+    color: #5a7a8a;
+    line-height: 1.5;
+  }
+
+  .cards { display: flex; flex-direction: column; gap: 28px; }
+
+  .card {
+    background: #141f2b;
+    border: 1px solid #1e3a4a;
+    border-radius: 10px;
+    padding: 24px;
+  }
+
+  .card-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+  }
+
+  .card-title span { font-size: 15px; font-weight: 600; color: #c0d8ee; }
+
+  .badge {
+    padding: 2px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .badge-pending  { background: #3a3a2d; color: #d0c88a; }
+  .badge-ok       { background: #2d3a4a; color: #8ab0d0; }
+  .badge-changed  { background: #2d6a2d; color: #a8f0a8; }
+
+  .card-url   { font-size: 11px; color: #3a6070; margin-top: 4px; word-break: break-all; }
+  .card-meta  { font-size: 11px; color: #4a6a7a; margin-top: 3px; }
+
+  .snapshot-box {
+    background: #0d1820;
+    border: 1px solid #1a3040;
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin: 14px 0;
+    font-size: 12px;
+    color: #607080;
+  }
+  .snapshot-box strong { color: #8ab0c0; }
+
+  .buttons { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+
+  button {
+    border-radius: 6px;
+    padding: 8px 18px;
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    border: 1px solid;
+    transition: all 0.15s;
+  }
+
+  .btn-save {
+    background: #1e4060;
+    color: #7ab0d0;
+    border-color: #2a5070;
+  }
+  .btn-save:hover:not(:disabled) { background: #254d74; }
+
+  .btn-check {
+    background: #223318;
+    color: #8ac870;
+    border-color: #3a5828;
+  }
+  .btn-check:hover:not(:disabled) { background: #2b3f1f; }
+  .btn-check:disabled { background: #141f2b; color: #3a5060; border-color: #1a2a30; cursor: not-allowed; }
+
+  button:disabled { cursor: not-allowed; opacity: 0.7; }
+
+  .result { margin-top: 18px; font-size: 13px; border-radius: 6px; padding: 12px 16px; }
+
+  .result-error   { background: #2a1a1a; color: #d08080; }
+  .result-saved   { background: #1a2a1a; color: #80c0a0; }
+  .result-diff    { background: #1a2a1a; border: 1px solid #3a5828; }
+  .result-nochange{ background: #1a1f2a; border: 1px solid #1e3040; }
+
+  .result-title { font-weight: 600; margin-bottom: 10px; }
+  .result-title.changed   { color: #90d870; }
+  .result-title.nochange  { color: #6090b0; }
+
+  .diff-section { margin-bottom: 8px; }
+  .diff-label-add { color: #60c060; font-weight: 600; margin-bottom: 4px; }
+  .diff-label-rem { color: #c06060; font-weight: 600; margin-bottom: 4px; }
+  .diff-item-add  { color: #a0e090; padding-left: 12px; }
+  .diff-item-rem  { color: #e09090; padding-left: 12px; }
+
+  .no-change-note { color: #4a7090; font-size: 12px; }
+
+  footer {
+    margin-top: 32px;
+    font-size: 11px;
+    color: #2a4050;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">Tennisgruppe 65 · Liga-Monitor</div>
+  <h1>Mannschaftsmeldungen</h1>
+  <p>Seiten auf neue Einträge prüfen · Snapshot speichern · Änderungen erkennen</p>
+</header>
+
+<div class="cards" id="cards"></div>
+
+<footer>Snapshots werden im Browser gespeichert · Abruf via Claude API</footer>
+
+<script>
+const URLS = [
+  {
+    id: "b1s2026",
+    label: "B1 S 2026 – Gruppe 165",
+    url: "https://baden.liga.nu/cgi-bin/WebObjects/nuLigaTENDE.woa/wa/groupPage?championship=B1+S+2026&group=165"
+  },
+  {
+    id: "badens2026",
+    label: "Baden S 2026 – Gruppe 22",
+    url: "https://baden.liga.nu/cgi-bin/WebObjects/nuLigaTENDE.woa/wa/groupPage?championship=Baden+S+2026&group=22"
+  }
+];
+
+const STORAGE_KEY = "tennis_snapshots_v2";
+
+// Load from localStorage
+function loadSnapshots() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+  } catch { return {}; }
+}
+
+function saveSnapshots(data) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+let state = loadSnapshots(); // { [id]: { teams, tableRows, otherInfo, time } }
+
+// --- API ---
+async function fetchPageContent(url) {
+  const resp = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 1000,
+      tools: [{ type: "web_search_20250305", name: "web_search" }],
+      system: `Du rufst eine Webseite ab und extrahierst strukturiert alle Mannschaftsnamen und Tabelleninformationen.
+Antworte NUR mit einem JSON-Objekt (kein Markdown, keine Backticks):
+{
+  "teams": ["Team 1", "Team 2"],
+  "tableRows": ["Zeile 1", "Zeile 2"],
+  "otherInfo": "sonstige relevante Infos"
+}
+Falls keine Daten gefunden werden, verwende leere Arrays.`,
+      messages: [{
+        role: "user",
+        content: `Rufe diese Seite ab und extrahiere alle Mannschaftsinformationen: ${url}`
+      }]
+    })
+  });
+
+  const data = await resp.json();
+  const textBlocks = (data.content || []).filter(b => b.type === "text");
+  const raw = textBlocks.map(b => b.text).join("\n");
+
+  try {
+    const clean = raw.replace(/```json|```/g, "").trim();
+    return JSON.parse(clean);
+  } catch {
+    return { teams: [], tableRows: [], otherInfo: raw.slice(0, 500) };
+  }
+}
+
+function diffArrays(oldArr = [], newArr = []) {
+  return {
+    added:   newArr.filter(x => !oldArr.includes(x)),
+    removed: oldArr.filter(x => !newArr.includes(x))
+  };
+}
+
+// --- Rendering ---
+function renderCard({ id, label, url }) {
+  const snap = state[id];
+
+  return `
+    <div class="card" id="card-${id}">
+      <div class="card-title">
+        <span>${label}</span>
+        <span class="badge ${snap ? 'badge-ok' : 'badge-pending'}">${snap ? 'Snapshot vorhanden' : 'Ausstehend'}</span>
+      </div>
+      <div class="card-url">${url}</div>
+      ${snap ? `<div class="card-meta">Letzter Snapshot: ${snap.time}</div>` : ''}
+
+      ${snap ? `
+        <div class="snapshot-box">
+          <strong>Gespeicherter Stand:</strong>
+          ${snap.teams?.length > 0
+            ? snap.teams.join(' · ')
+            : snap.tableRows?.length > 0
+              ? `${snap.tableRows.length} Tabellenzeilen`
+              : snap.otherInfo?.slice(0, 200) || 'Keine Daten'}
+        </div>
+      ` : ''}
+
+      <div class="buttons">
+        <button class="btn-save" onclick="doSnapshot('${id}', \`${url}\`)">📥 Snapshot speichern</button>
+        <button class="btn-check" onclick="doCheck('${id}', \`${url}\`)" ${!snap ? 'disabled' : ''}>🔍 Auf Änderungen prüfen</button>
+      </div>
+
+      <div id="result-${id}"></div>
+    </div>
+  `;
+}
+
+function renderAll() {
+  document.getElementById("cards").innerHTML = URLS.map(renderCard).join("");
+}
+
+function setLoading(id, text) {
+  const card = document.getElementById(`card-${id}`);
+  card.querySelectorAll("button").forEach(b => {
+    b.disabled = true;
+    if (b.classList.contains("btn-save") && text === "speichern") b.textContent = "⏳ Wird geladen …";
+    if (b.classList.contains("btn-check") && text === "prüfen")   b.textContent = "⏳ Prüfe …";
+  });
+}
+
+function showResult(id, html) {
+  document.getElementById(`result-${id}`).innerHTML = html;
+}
+
+// --- Actions ---
+async function doSnapshot(id, url) {
+  setLoading(id, "speichern");
+  showResult(id, "");
+  try {
+    const data = await fetchPageContent(url);
+    const now = new Date().toLocaleString("de-DE");
+    state[id] = { ...data, time: now };
+    saveSnapshots(state);
+    renderAll();
+    showResult(id, `<div class="result result-saved">✅ Snapshot gespeichert um ${now} – ${
+      data.teams?.length > 0 ? `${data.teams.length} Mannschaft(en) gefunden` :
+      `${data.tableRows?.length || 0} Einträge`
+    }</div>`);
+  } catch (e) {
+    renderAll();
+    showResult(id, `<div class="result result-error">⚠️ Fehler: ${e.message}</div>`);
+  }
+}
+
+async function doCheck(id, url) {
+  if (!state[id]) { alert("Bitte zuerst einen Snapshot speichern."); return; }
+  setLoading(id, "prüfen");
+  showResult(id, "");
+  try {
+    const fresh = await fetchPageContent(url);
+    const now = new Date().toLocaleString("de-DE");
+    const teamDiff  = diffArrays(state[id].teams,     fresh.teams);
+    const tableDiff = diffArrays(state[id].tableRows, fresh.tableRows);
+    const hasChanges = teamDiff.added.length || teamDiff.removed.length ||
+                       tableDiff.added.length || tableDiff.removed.length;
+
+    let html = `<div class="result ${hasChanges ? 'result-diff' : 'result-nochange'}">
+      <div class="result-title ${hasChanges ? 'changed' : 'nochange'}">
+        ${hasChanges ? '🆕 Änderungen gefunden!' : '✔️ Keine Änderungen'} · ${now}
+      </div>`;
+
+    if (teamDiff.added.length) {
+      html += `<div class="diff-section"><div class="diff-label-add">+ Neu hinzugekommen:</div>
+        ${teamDiff.added.map(t => `<div class="diff-item-add">▸ ${t}</div>`).join("")}</div>`;
+    }
+    if (teamDiff.removed.length) {
+      html += `<div class="diff-section"><div class="diff-label-rem">− Entfernt:</div>
+        ${teamDiff.removed.map(t => `<div class="diff-item-rem">▸ ${t}</div>`).join("")}</div>`;
+    }
+    if (tableDiff.added.length) {
+      html += `<div class="diff-section"><div class="diff-label-add">+ Neue Tabelleneinträge:</div>
+        ${tableDiff.added.map(t => `<div class="diff-item-add" style="font-size:12px">▸ ${t}</div>`).join("")}</div>`;
+    }
+    if (!hasChanges) {
+      html += `<div class="no-change-note">Stand ist identisch mit dem gespeicherten Snapshot.</div>`;
+    }
+
+    html += `</div>`;
+    renderAll();
+    showResult(id, html);
+  } catch (e) {
+    renderAll();
+    showResult(id, `<div class="result result-error">⚠️ Fehler: ${e.message}</div>`);
+  }
+}
+
+renderAll();
+</script>
+</body>
+</html>
