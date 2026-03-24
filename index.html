@@ -6,102 +6,48 @@
 <title>Liga-Monitor · Tennisgruppe 65</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    min-height: 100vh;
-    background: #0f1923;
-    color: #e0e8f0;
-    font-family: 'Georgia', 'Times New Roman', serif;
-    padding: 28px 20px;
-  }
-
-  header {
-    margin-bottom: 32px;
-    border-bottom: 1px solid #1e3a4a;
-    padding-bottom: 18px;
-  }
-  header .eyebrow {
-    font-size: 11px; color: #4a7090;
-    letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 6px;
-  }
+  body { min-height: 100vh; background: #0f1923; color: #e0e8f0; font-family: 'Georgia', 'Times New Roman', serif; padding: 28px 20px; }
+  header { margin-bottom: 32px; border-bottom: 1px solid #1e3a4a; padding-bottom: 18px; }
+  header .eyebrow { font-size: 11px; color: #4a7090; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 6px; }
   header h1 { font-size: 24px; font-weight: 400; color: #c8dff0; }
   header p  { margin-top: 6px; font-size: 13px; color: #5a7a8a; line-height: 1.5; }
-
   .cards { display: flex; flex-direction: column; gap: 24px; }
-
-  .card {
-    background: #141f2b;
-    border: 1px solid #1e3a4a;
-    border-radius: 10px;
-    padding: 20px;
-  }
-
+  .card { background: #141f2b; border: 1px solid #1e3a4a; border-radius: 10px; padding: 20px; }
   .card-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
   .card-head span { font-size: 15px; font-weight: 600; color: #c0d8ee; }
-
-  .badge {
-    padding: 2px 10px; border-radius: 4px;
-    font-size: 11px; font-weight: 700;
-    letter-spacing: 0.05em; text-transform: uppercase;
-  }
+  .badge { padding: 2px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
   .badge-pending { background: #3a3a2d; color: #d0c88a; }
   .badge-ok      { background: #2d3a4a; color: #8ab0d0; }
-
   .card-url  { font-size: 11px; color: #3a6070; margin-top: 3px; word-break: break-all; }
   .card-meta { font-size: 11px; color: #4a6a7a; margin-top: 3px; }
-
-  .snapshot-box {
-    background: #0d1820; border: 1px solid #1a3040;
-    border-radius: 6px; padding: 10px 14px;
-    margin: 12px 0; font-size: 12px; color: #607080;
-  }
+  .snapshot-box { background: #0d1820; border: 1px solid #1a3040; border-radius: 6px; padding: 10px 14px; margin: 12px 0; font-size: 12px; color: #607080; }
   .snapshot-box strong { color: #8ab0c0; }
-
   .buttons { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
-
-  button {
-    border-radius: 6px; padding: 9px 18px;
-    font-size: 13px; font-family: inherit;
-    cursor: pointer; border: 1px solid;
-    transition: background 0.15s;
-  }
+  button { border-radius: 6px; padding: 9px 18px; font-size: 13px; font-family: inherit; cursor: pointer; border: 1px solid; transition: background 0.15s; }
   button:disabled { opacity: 0.6; cursor: not-allowed; }
-
   .btn-save  { background: #1e4060; color: #7ab0d0; border-color: #2a5070; }
   .btn-save:hover:not(:disabled)  { background: #254d74; }
-
   .btn-check { background: #223318; color: #8ac870; border-color: #3a5828; }
   .btn-check:hover:not(:disabled) { background: #2b3f1f; }
   .btn-check:disabled { background: #141f2b; color: #3a5060; border-color: #1a2a30; }
-
-  .btn-link {
-    display: inline-block;
-    background: #1a2a3a; color: #6a9ab0;
-    border: 1px solid #2a4050; border-radius: 6px;
-    padding: 9px 18px; font-size: 13px;
-    font-family: inherit; text-decoration: none;
-    transition: background 0.15s;
-  }
+  .btn-link { display: inline-block; background: #1a2a3a; color: #6a9ab0; border: 1px solid #2a4050; border-radius: 6px; padding: 9px 18px; font-size: 13px; font-family: inherit; text-decoration: none; transition: background 0.15s; }
   .btn-link:hover { background: #223344; color: #90c0d8; }
-
   .result { margin-top: 16px; font-size: 13px; border-radius: 6px; padding: 12px 16px; line-height: 1.6; }
   .result-error    { background: #2a1a1a; color: #d08080; }
   .result-saved    { background: #1a2a1a; color: #80c0a0; }
   .result-diff     { background: #1a2a1a; border: 1px solid #3a5828; }
   .result-nochange { background: #1a1f2a; border: 1px solid #1e3040; }
   .result-loading  { background: #1a2030; color: #7a90a0; }
-
   .result-title          { font-weight: 600; margin-bottom: 8px; font-size: 14px; }
   .result-title.changed  { color: #90d870; }
   .result-title.nochange { color: #6090b0; }
-
   .diff-block     { margin-bottom: 10px; }
   .diff-label-add { color: #60c060; font-weight: 600; margin-bottom: 3px; }
   .diff-label-rem { color: #c06060; font-weight: 600; margin-bottom: 3px; }
   .diff-item-add  { color: #a0e090; padding-left: 12px; font-size: 12px; }
   .diff-item-rem  { color: #e09090; padding-left: 12px; font-size: 12px; }
   .no-change-note { color: #4a7090; font-size: 12px; }
-
+  .proxy-info { font-size: 10px; color: #3a5060; margin-top: 4px; }
   footer { margin-top: 28px; font-size: 11px; color: #2a4050; text-align: center; }
 </style>
 </head>
@@ -132,52 +78,53 @@ const URLS = [
 ];
 
 const STORAGE_KEY = "tennis_monitor_v3";
-const PROXY = "https://api.allorigins.win/get?url=";
+
+const PROXIES = [
+  { name: "allorigins",  build: url => "https://api.allorigins.win/get?url=" + encodeURIComponent(url),     parse: r => r.json().then(j => j.contents) },
+  { name: "corsproxy",   build: url => "https://corsproxy.io/?" + encodeURIComponent(url),                  parse: r => r.text() },
+  { name: "thingproxy",  build: url => "https://thingproxy.freeboard.io/fetch/" + encodeURIComponent(url),  parse: r => r.text() }
+];
 
 function load() {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); }
   catch { return {}; }
 }
-function save(data) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-}
+function save(data) { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
 
 let state = load();
 
-// Extract meaningful text lines from HTML
 function extractLines(html) {
   const tmp = document.createElement("div");
   tmp.innerHTML = html;
-  // Remove scripts and styles
   tmp.querySelectorAll("script,style,noscript").forEach(el => el.remove());
   const text = tmp.innerText || tmp.textContent || "";
-  return text.split("\n")
-    .map(l => l.trim())
-    .filter(l => l.length > 2 && l.length < 200);
+  return text.split("\n").map(l => l.trim()).filter(l => l.length > 2 && l.length < 200);
 }
 
-// Fetch via CORS proxy with timeout + retry
-async function fetchPage(url, attempt) {
-  attempt = attempt || 1;
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 20000);
-  try {
-    const resp = await fetch(PROXY + encodeURIComponent(url), {
-      signal: controller.signal
-    });
-    clearTimeout(timer);
-    if (!resp.ok) throw new Error("HTTP " + resp.status);
-    const json = await resp.json();
-    return json.contents || "";
-  } catch(e) {
-    clearTimeout(timer);
-    if (attempt < 3) {
-      showResult(activeId, '<div class="result result-loading">🔄 Versuch ' + (attempt+1) + ' von 3 …</div>');
-      await new Promise(r => setTimeout(r, 2000));
-      return fetchPage(url, attempt + 1);
+async function fetchPage(url, onStatus) {
+  let lastError = null;
+  for (let i = 0; i < PROXIES.length; i++) {
+    const proxy = PROXIES[i];
+    onStatus && onStatus("⏳ Versuch " + (i+1) + "/" + PROXIES.length + " via " + proxy.name + " …");
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 18000);
+      const resp = await fetch(proxy.build(url), { signal: controller.signal });
+      clearTimeout(timer);
+      if (!resp.ok) throw new Error("HTTP " + resp.status);
+      const content = await proxy.parse(resp);
+      if (!content || content.length < 100) throw new Error("Leere Antwort");
+      if (!content.includes("nuLiga") && !content.includes("Mannschaft") && !content.includes("Gruppe")) {
+        throw new Error("Unerwarteter Seiteninhalt");
+      }
+      return { content, proxyName: proxy.name };
+    } catch(e) {
+      lastError = e.name === "AbortError"
+        ? new Error(proxy.name + ": Zeitüberschreitung")
+        : new Error(proxy.name + ": " + e.message);
     }
-    throw new Error(e.name === "AbortError" ? "Zeitüberschreitung – bitte erneut versuchen" : e.message);
   }
+  throw lastError || new Error("Alle Proxies fehlgeschlagen");
 }
 
 function diffLines(oldLines, newLines) {
@@ -196,7 +143,8 @@ function renderCard(item) {
   let snapHtml = "";
   if (snap) {
     snapHtml = '<div class="card-meta">Letzter Snapshot: ' + snap.time + ' (' + snap.lines.length + ' Zeilen)</div>'
-      + '<div class="snapshot-box"><strong>Inhalt erfasst:</strong> ' + snap.lines.length + ' Textzeilen gespeichert</div>';
+      + '<div class="snapshot-box"><strong>Inhalt erfasst:</strong> ' + snap.lines.length + ' Textzeilen gespeichert'
+      + (snap.proxy ? ' <span class="proxy-info">via ' + snap.proxy + '</span>' : '') + '</div>';
   }
   return '<div class="card" id="card-' + item.id + '">'
     + '<div class="card-head"><span>' + item.label + '</span>'
@@ -205,7 +153,7 @@ function renderCard(item) {
     + '<div class="card-url">' + item.url + '</div>'
     + snapHtml
     + '<div class="buttons">'
-    + '<button class="btn-save" onclick="doSnapshot(\'' + item.id + '\',\'' + item.url + '\')">📥 Snapshot speichern</button>'
+    + '<button class="btn-save"  onclick="doSnapshot(\'' + item.id + '\',\'' + item.url + '\')">📥 Snapshot speichern</button>'
     + '<button class="btn-check" onclick="doCheck(\'' + item.id + '\',\'' + item.url + '\')" '
     + (snap ? '' : 'disabled') + '>🔍 Auf Änderungen prüfen</button>'
     + '<a class="btn-link" href="' + item.url + '" target="_blank">🌐 Seite öffnen</a>'
@@ -218,14 +166,9 @@ function renderAll() {
   document.getElementById("cards").innerHTML = URLS.map(renderCard).join("");
 }
 
-function lockCard(id, mode) {
+function lockCard(id) {
   activeId = id;
-  const card = document.getElementById("card-" + id);
-  card.querySelectorAll("button").forEach(b => {
-    b.disabled = true;
-    if (b.classList.contains("btn-save") && mode === "snap")   b.textContent = "⏳ Lädt …";
-    if (b.classList.contains("btn-check") && mode === "check") b.textContent = "⏳ Prüfe …";
-  });
+  document.getElementById("card-" + id).querySelectorAll("button").forEach(b => b.disabled = true);
 }
 
 function showResult(id, html) {
@@ -234,34 +177,36 @@ function showResult(id, html) {
 }
 
 async function doSnapshot(id, url) {
-  lockCard(id, "snap");
+  lockCard(id);
   showResult(id, '<div class="result result-loading">⏳ Seite wird abgerufen …</div>');
   try {
-    const html = await fetchPage(url);
-    const lines = extractLines(html);
+    const { content, proxyName } = await fetchPage(url, msg => {
+      showResult(id, '<div class="result result-loading">' + msg + '</div>');
+    });
+    const lines = extractLines(content);
     const now = new Date().toLocaleString("de-DE");
-    state[id] = { lines, time: now };
+    state[id] = { lines, time: now, proxy: proxyName };
     save(state);
     renderAll();
-    showResult(id, '<div class="result result-saved">✅ Snapshot gespeichert um ' + now + ' – ' + lines.length + ' Textzeilen erfasst</div>');
+    showResult(id, '<div class="result result-saved">✅ Snapshot gespeichert um ' + now + ' – ' + lines.length + ' Textzeilen via <strong>' + proxyName + '</strong></div>');
   } catch(e) {
     renderAll();
-    showResult(id, '<div class="result result-error">⚠️ ' + e.message + '</div>');
+    showResult(id, '<div class="result result-error">⚠️ ' + e.message + '<br><small>Bitte erneut versuchen oder Seite direkt öffnen.</small></div>');
   }
   activeId = null;
 }
 
 async function doCheck(id, url) {
   if (!state[id]) { alert("Bitte zuerst einen Snapshot speichern."); return; }
-  lockCard(id, "check");
+  lockCard(id);
   showResult(id, '<div class="result result-loading">⏳ Seite wird abgerufen …</div>');
   try {
-    const html = await fetchPage(url);
-    const freshLines = extractLines(html);
+    const { content, proxyName } = await fetchPage(url, msg => {
+      showResult(id, '<div class="result result-loading">' + msg + '</div>');
+    });
+    const freshLines = extractLines(content);
     const now = new Date().toLocaleString("de-DE");
     const diff = diffLines(state[id].lines, freshLines);
-
-    // Filter noise: only lines with real content (min 5 chars, no pure numbers/symbols)
     const meaningful = l => l.length >= 5 && /[a-zA-ZäöüÄÖÜß]/.test(l);
     const added   = diff.added.filter(meaningful);
     const removed = diff.removed.filter(meaningful);
@@ -269,24 +214,24 @@ async function doCheck(id, url) {
 
     let html2 = '<div class="result ' + (hasChanges ? 'result-diff' : 'result-nochange') + '">'
       + '<div class="result-title ' + (hasChanges ? 'changed' : 'nochange') + '">'
-      + (hasChanges ? '🆕 Änderungen gefunden!' : '✔️ Keine Änderungen') + ' · ' + now + '</div>';
+      + (hasChanges ? '🆕 Änderungen gefunden!' : '✔️ Keine Änderungen') + ' · ' + now
+      + ' <span class="proxy-info">via ' + proxyName + '</span></div>';
 
     if (added.length) {
-      html2 += '<div class="diff-block"><div class="diff-label-add">+ Neu hinzugekommen (' + added.length + '):</div>'
-        + added.slice(0, 20).map(l => '<div class="diff-item-add">▸ ' + l + '</div>').join("")
+      html2 += '<div class="diff-block"><div class="diff-label-add">+ Neu (' + added.length + '):</div>'
+        + added.slice(0,20).map(l => '<div class="diff-item-add">▸ ' + l + '</div>').join("")
         + (added.length > 20 ? '<div class="diff-item-add">… und ' + (added.length-20) + ' weitere</div>' : '')
         + '</div>';
     }
     if (removed.length) {
-      html2 += '<div class="diff-block"><div class="diff-label-rem">− Nicht mehr vorhanden (' + removed.length + '):</div>'
-        + removed.slice(0, 20).map(l => '<div class="diff-item-rem">▸ ' + l + '</div>').join("")
+      html2 += '<div class="diff-block"><div class="diff-label-rem">− Entfernt (' + removed.length + '):</div>'
+        + removed.slice(0,20).map(l => '<div class="diff-item-rem">▸ ' + l + '</div>').join("")
         + (removed.length > 20 ? '<div class="diff-item-rem">… und ' + (removed.length-20) + ' weitere</div>' : '')
         + '</div>';
     }
     if (!hasChanges) {
       html2 += '<div class="no-change-note">Stand ist identisch mit dem gespeicherten Snapshot.</div>';
     }
-
     html2 += '</div>';
     renderAll();
     showResult(id, html2);
