@@ -1,0 +1,1548 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎾 Kleist – Matchhistorie</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0e1117;
+    --bg2: #161b25;
+    --bg3: #1e2535;
+    --border: #2a3348;
+    --accent: #4ade80;
+    --accent2: #f59e0b;
+    --red: #f87171;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --win: #22c55e;
+    --loss: #ef4444;
+    --card: #171e2e;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 58px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 17px;
+    letter-spacing: -0.3px;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .logo span { color: var(--text); font-weight: 400; }
+
+  nav { display: flex; gap: 4px; }
+  nav button {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13.5px;
+    font-weight: 500;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all .15s;
+    white-space: nowrap;
+  }
+  nav button:hover { background: var(--bg3); color: var(--text); }
+  nav button.active { background: var(--bg3); color: var(--accent); }
+
+  .header-actions { display: flex; gap: 8px; align-items: center; }
+  .btn-sm {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12.5px;
+    font-weight: 500;
+    padding: 5px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    background: var(--bg3);
+    color: var(--text);
+    transition: all .15s;
+  }
+  .btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── Main Layout ── */
+  main { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+
+  /* ── Views ── */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ── Search View ── */
+  .search-hero {
+    text-align: center;
+    padding: 48px 0 36px;
+  }
+  .search-hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 8px;
+  }
+  .search-hero p { color: var(--muted); font-size: 14px; }
+
+  .search-box-wrap {
+    position: relative;
+    max-width: 560px;
+    margin: 28px auto 0;
+  }
+  .search-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-size: 18px;
+    pointer-events: none;
+  }
+  #searchInput {
+    width: 100%;
+    padding: 14px 20px 14px 46px;
+    background: var(--bg2);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    outline: none;
+    transition: border-color .2s;
+  }
+  #searchInput:focus { border-color: var(--accent); }
+  #searchInput::placeholder { color: var(--muted); }
+
+  .search-filters {
+    display: flex;
+    gap: 10px;
+    max-width: 560px;
+    margin: 14px auto 0;
+    flex-wrap: wrap;
+  }
+  .filter-select {
+    flex: 1;
+    min-width: 120px;
+    padding: 8px 12px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    outline: none;
+    cursor: pointer;
+  }
+  .filter-select:focus { border-color: var(--accent); }
+
+  /* ── Result Count ── */
+  .result-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 28px 0 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .result-count {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .result-count strong { color: var(--accent); }
+
+  /* ── Match Cards ── */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+  }
+
+  .match-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    cursor: pointer;
+    transition: all .18s;
+    position: relative;
+    overflow: hidden;
+  }
+  .match-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--win);
+    border-radius: 3px 0 0 3px;
+  }
+  .match-card.loss::before { background: var(--loss); }
+  .match-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,.3);
+  }
+
+  .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+  .card-opponent {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+  }
+  .badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-weight: 500;
+    letter-spacing: .5px;
+  }
+  .badge.win { background: rgba(34,197,94,.15); color: var(--win); border: 1px solid rgba(34,197,94,.3); }
+  .badge.loss { background: rgba(239,68,68,.15); color: var(--loss); border: 1px solid rgba(239,68,68,.3); }
+
+  .card-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 16px;
+    margin-bottom: 12px;
+  }
+  .meta-item { font-size: 12.5px; color: var(--muted); }
+  .meta-item strong { color: var(--text); font-weight: 500; }
+
+  .card-score {
+    font-family: 'DM Mono', monospace;
+    font-size: 22px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    margin-top: 8px;
+  }
+  .card-score.win-score { color: var(--win); }
+  .card-score.loss-score { color: var(--loss); }
+
+  .lk-pill {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 2px 7px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--accent2);
+    display: inline-block;
+    margin-top: 4px;
+  }
+
+  /* ── Detail Modal ── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.7);
+    z-index: 200;
+    backdrop-filter: blur(4px);
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 640px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 28px;
+    position: relative;
+  }
+  .modal-close {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all .15s;
+  }
+  .modal-close:hover { color: var(--text); border-color: var(--text); }
+
+  .modal-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+  .modal-subtitle { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
+
+  .detail-section {
+    margin-bottom: 20px;
+  }
+  .detail-section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 24px;
+  }
+  .detail-row { }
+  .detail-label { font-size: 11.5px; color: var(--muted); margin-bottom: 2px; }
+  .detail-value { font-size: 14px; font-weight: 500; }
+  .detail-value.highlight { color: var(--accent); font-family: 'DM Mono', monospace; font-size: 18px; }
+  .detail-notes {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 13.5px;
+    color: var(--text);
+    font-style: italic;
+    line-height: 1.6;
+  }
+
+  /* ── New Match Form ── */
+  .form-header {
+    margin-bottom: 32px;
+  }
+  .form-header h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    margin-bottom: 6px;
+  }
+  .form-header p { color: var(--muted); font-size: 14px; }
+
+  .form-section {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px 24px;
+    margin-bottom: 16px;
+  }
+  .form-section-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--accent);
+    margin-bottom: 18px;
+  }
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px 20px;
+  }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1/-1; }
+  .form-group label {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 500;
+    letter-spacing: .3px;
+  }
+  .form-group input, .form-group select, .form-group textarea {
+    padding: 9px 12px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color .15s;
+  }
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus { border-color: var(--accent); }
+  .form-group textarea { resize: vertical; min-height: 80px; }
+  .form-group select option { background: var(--bg3); }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #0a1a0e;
+    border: none;
+    padding: 12px 28px;
+    border-radius: 8px;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .15s;
+    letter-spacing: .3px;
+  }
+  .btn-primary:hover { background: #86efac; transform: translateY(-1px); }
+  .btn-secondary {
+    background: none;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all .15s;
+    margin-right: 10px;
+  }
+  .btn-secondary:hover { color: var(--text); border-color: var(--text); }
+
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding-top: 8px;
+  }
+
+  /* ── H2H View ── */
+  .h2h-header {
+    margin-bottom: 28px;
+  }
+  .h2h-header h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    margin-bottom: 6px;
+  }
+  .h2h-header p { color: var(--muted); font-size: 14px; }
+
+  .h2h-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+  }
+
+  .h2h-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all .18s;
+  }
+  .h2h-card:hover {
+    border-color: var(--accent2);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,.3);
+  }
+  .h2h-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .h2h-lk {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--accent2);
+    margin-bottom: 14px;
+  }
+
+  .h2h-bars { margin-bottom: 14px; }
+  .h2h-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+  .h2h-bar-label {
+    font-size: 11.5px;
+    color: var(--muted);
+    width: 70px;
+    flex-shrink: 0;
+  }
+  .h2h-bar-track {
+    flex: 1;
+    height: 6px;
+    background: var(--bg3);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .h2h-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width .5s ease;
+  }
+  .h2h-bar-fill.win { background: var(--win); }
+  .h2h-bar-fill.loss { background: var(--loss); }
+  .h2h-bar-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    width: 24px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .h2h-stats-row {
+    display: flex;
+    gap: 12px;
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+  }
+  .h2h-stat {
+    flex: 1;
+    text-align: center;
+  }
+  .h2h-stat-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 18px;
+    font-weight: 500;
+  }
+  .h2h-stat-label {
+    font-size: 10.5px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  /* H2H Detail Modal (opponent history) */
+  .h2h-match-list { margin-top: 16px; }
+  .h2h-match-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13.5px;
+  }
+  .h2h-match-item:last-child { border-bottom: none; }
+
+  /* ── Statistik View ── */
+  .stats-header {
+    margin-bottom: 28px;
+  }
+  .stats-header h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    margin-bottom: 6px;
+  }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  .stat-tile {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+  }
+  .stat-tile-val {
+    font-family: 'Syne', sans-serif;
+    font-size: 32px;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .stat-tile-label { font-size: 12px; color: var(--muted); }
+
+  .chart-block {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  .chart-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .chart-desc { font-size: 12.5px; color: var(--muted); margin-bottom: 18px; }
+
+  /* LK Zone Table */
+  .lk-table { width: 100%; border-collapse: collapse; }
+  .lk-table th {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .lk-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(42,51,72,.5);
+    font-size: 13.5px;
+  }
+  .lk-table tr:last-child td { border-bottom: none; }
+  .lk-table tr:hover td { background: rgba(255,255,255,.02); }
+
+  /* ── Empty State ── */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+  .empty-state .icon { font-size: 48px; margin-bottom: 16px; }
+  .empty-state p { font-size: 14px; }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--bg2);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 13.5px;
+    font-weight: 500;
+    z-index: 999;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all .25s;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  /* ── Responsive ── */
+  @media (max-width: 640px) {
+    header { padding: 0 14px; }
+    .logo { font-size: 14px; }
+    nav button { font-size: 12px; padding: 5px 9px; }
+    main { padding: 20px 14px; }
+    .search-hero h1 { font-size: 24px; }
+    .form-grid { grid-template-columns: 1fr; }
+    .detail-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🎾 <span>Kleist</span> Matchhistorie</div>
+  <nav>
+    <button onclick="showView('search')" id="nav-search" class="active">Suche</button>
+    <button onclick="showView('neue')" id="nav-neue">+ Neu</button>
+    <button onclick="showView('h2h')" id="nav-h2h">Head-to-Head</button>
+    <button onclick="showView('stats')" id="nav-stats">Statistik</button>
+  </nav>
+  <div class="header-actions">
+    <button class="btn-sm" onclick="exportData()">↓ Export</button>
+    <label class="btn-sm" style="cursor:pointer">↑ Import
+      <input type="file" accept=".json" onchange="importData(event)" style="display:none">
+    </label>
+  </div>
+</header>
+
+<main>
+
+  <!-- ═══ SEARCH VIEW ═══ -->
+  <div class="view active" id="view-search">
+    <div class="search-hero">
+      <h1>Meine Begegnungen</h1>
+      <p>Suche nach Gegner, Liga, Saison oder Ergebnis</p>
+    </div>
+    <div class="search-box-wrap">
+      <span class="search-icon">🔍</span>
+      <input id="searchInput" type="text" placeholder="Gegner, Liga, Saison …" oninput="renderSearch()">
+    </div>
+    <div class="search-filters">
+      <select class="filter-select" id="filterErgebnis" onchange="renderSearch()">
+        <option value="">Alle Ergebnisse</option>
+        <option value="Sieg">Siege</option>
+        <option value="Niederlage">Niederlagen</option>
+      </select>
+      <select class="filter-select" id="filterSaison" onchange="renderSearch()">
+        <option value="">Alle Saisons</option>
+      </select>
+      <select class="filter-select" id="filterLiga" onchange="renderSearch()">
+        <option value="">Alle Ligen</option>
+      </select>
+    </div>
+    <div class="result-bar">
+      <div class="result-count" id="resultCount"><strong>0</strong> Begegnungen</div>
+    </div>
+    <div class="cards-grid" id="cardsGrid"></div>
+    <div class="empty-state" id="emptySearch" style="display:none">
+      <div class="icon">🎾</div>
+      <p>Keine Begegnungen gefunden</p>
+    </div>
+  </div>
+
+  <!-- ═══ NEUE BEGEGNUNG ═══ -->
+  <div class="view" id="view-neue">
+    <div class="form-header">
+      <h2>Neue Begegnung</h2>
+      <p>Alle Felder außer Gegner und Ergebnis sind optional</p>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">📅 Zeitraum & Kontext</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Datum</label>
+          <input type="date" id="f-datum">
+        </div>
+        <div class="form-group">
+          <label>Saison</label>
+          <input type="text" id="f-saison" placeholder="z.B. Sommer 2026">
+        </div>
+        <div class="form-group">
+          <label>Liga / Wettbewerb</label>
+          <input type="text" id="f-liga" placeholder="z.B. H65 1. Bezirksliga">
+        </div>
+        <div class="form-group">
+          <label>Heim / Auswärts</label>
+          <select id="f-heimaus">
+            <option value="">–</option>
+            <option>Heim</option>
+            <option>Auswärts</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Meine Mannschaft</label>
+          <input type="text" id="f-mannschaft" value="TSG TC RW Lauda">
+        </div>
+        <div class="form-group">
+          <label>Meine LK</label>
+          <input type="text" id="f-meineLK" placeholder="z.B. 16,2">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">🎯 Gegner</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Gegner Name *</label>
+          <input type="text" id="f-gegner" placeholder="Nachname Vorname">
+        </div>
+        <div class="form-group">
+          <label>Gegner Verein</label>
+          <input type="text" id="f-verein" placeholder="TC …">
+        </div>
+        <div class="form-group">
+          <label>Gegner LK</label>
+          <input type="text" id="f-gegnerLK" placeholder="z.B. 13,5">
+        </div>
+        <div class="form-group">
+          <label>Einzel / Doppel</label>
+          <select id="f-typ">
+            <option>Einzel</option>
+            <option>Doppel</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">🎾 Spieldetails</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>1. Satz (z.B. 6:3)</label>
+          <input type="text" id="f-satz1" placeholder="6:3">
+        </div>
+        <div class="form-group">
+          <label>2. Satz</label>
+          <input type="text" id="f-satz2" placeholder="4:6">
+        </div>
+        <div class="form-group">
+          <label>3. Satz</label>
+          <input type="text" id="f-satz3" placeholder="7:5">
+        </div>
+        <div class="form-group">
+          <label>Gesamt Sätze (z.B. 2:1)</label>
+          <input type="text" id="f-gesamt" placeholder="2:1">
+        </div>
+        <div class="form-group">
+          <label>Ergebnis *</label>
+          <select id="f-ergebnis">
+            <option value="">– bitte wählen –</option>
+            <option>Sieg</option>
+            <option>Niederlage</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Dauer (Minuten)</label>
+          <input type="number" id="f-dauer" placeholder="75">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">📊 Statistik (optional)</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Aufschlag %</label>
+          <input type="text" id="f-aufschlag" placeholder="62%">
+        </div>
+        <div class="form-group">
+          <label>Asse</label>
+          <input type="number" id="f-asse" placeholder="3">
+        </div>
+        <div class="form-group">
+          <label>Doppelfehler</label>
+          <input type="number" id="f-df" placeholder="2">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">📝 Notizen</div>
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Notizen / Form / Eindrücke</label>
+          <textarea id="f-notizen" placeholder="Freier Text …"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn-secondary" onclick="clearForm()">Zurücksetzen</button>
+      <button class="btn-primary" onclick="saveMatch()">Begegnung speichern</button>
+    </div>
+  </div>
+
+  <!-- ═══ HEAD-TO-HEAD ═══ -->
+  <div class="view" id="view-h2h">
+    <div class="h2h-header">
+      <h2>Head-to-Head</h2>
+      <p>Bilanz gegen jeden Gegner – klicke für Details</p>
+    </div>
+    <div class="h2h-grid" id="h2hGrid"></div>
+  </div>
+
+  <!-- ═══ STATISTIK ═══ -->
+  <div class="view" id="view-stats">
+    <div class="stats-header">
+      <h2>Statistik & Analyse</h2>
+    </div>
+    <div class="stats-row" id="statTiles"></div>
+
+    <div class="chart-block">
+      <div class="chart-title">LK-Korrelation</div>
+      <div class="chart-desc">Gibt es einen Zusammenhang zwischen Gegner-LK und deinem Ergebnis?<br>
+      <small style="color:var(--muted)">LK-Skala: niedrigere Zahl = stärkerer Spieler. Punkte über der Linie = Sieg.</small></div>
+      <canvas id="lkChart" height="260"></canvas>
+    </div>
+
+    <div class="chart-block">
+      <div class="chart-title">Siegquote nach LK-Zone</div>
+      <div class="chart-desc">Gegen welche Stärkeklassen gewinnst du am häufigsten?</div>
+      <table class="lk-table" id="lkTable">
+        <thead>
+          <tr>
+            <th>Gegner-LK-Zone</th>
+            <th>Spiele</th>
+            <th>Siege</th>
+            <th>Niederlagen</th>
+            <th>Siegquote</th>
+          </tr>
+        </thead>
+        <tbody id="lkTableBody"></tbody>
+      </table>
+    </div>
+
+    <div class="chart-block">
+      <div class="chart-title">Saisonverlauf</div>
+      <div class="chart-desc">Siegquote pro Saison</div>
+      <canvas id="saisonChart" height="200"></canvas>
+    </div>
+  </div>
+
+</main>
+
+<!-- ═══ MATCH DETAIL MODAL ═══ -->
+<div class="modal-overlay" id="detailModal" onclick="closeModal(event)">
+  <div class="modal" id="modalContent">
+    <button class="modal-close" onclick="closeDetailModal()">✕</button>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<!-- ═══ H2H DETAIL MODAL ═══ -->
+<div class="modal-overlay" id="h2hModal" onclick="closeH2HModal(event)">
+  <div class="modal" id="h2hModalContent">
+    <button class="modal-close" onclick="closeH2HModal()">✕</button>
+    <div id="h2hModalBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════
+//  DATA LAYER
+// ═══════════════════════════════════════════
+
+const STORAGE_KEY = 'kleist_tennis_v1';
+
+const SEED_DATA = [
+  { id: 1, datum: '', saison: 'Sommer 2025', liga: 'H65 1.Bezirksliga', heimAuswärts: 'Auswärts', mannschaft: 'TSG TC RW Lauda', meineLK: '16,2', gegner: 'Wagner', verein: '', gegnerLK: '16,6', typ: 'Einzel', satz1: '', satz2: '', satz3: '', gesamt: '1:2', ergebnis: 'Niederlage', dauer: '', aufschlag: '', asse: '', doppelfehler: '', notizen: '' },
+  { id: 2, datum: '', saison: 'Sommer 2025', liga: 'H65 1.Bezirksliga', heimAuswärts: 'Auswärts', mannschaft: 'TSG TC RW Lauda', meineLK: '16,2', gegner: 'Wolter', verein: '', gegnerLK: '13,0', typ: 'Einzel', satz1: '', satz2: '', satz3: '', gesamt: '2:0', ergebnis: 'Sieg', dauer: '', aufschlag: '', asse: '', doppelfehler: '', notizen: '' },
+  { id: 3, datum: '', saison: 'Sommer 2025', liga: 'H65 1.Bezirksliga', heimAuswärts: 'Auswärts', mannschaft: 'TSG TC RW Lauda', meineLK: '16,2', gegner: 'Sauer', verein: '', gegnerLK: '15,9', typ: 'Einzel', satz1: '', satz2: '', satz3: '', gesamt: '2:0', ergebnis: 'Sieg', dauer: '', aufschlag: '', asse: '', doppelfehler: '', notizen: '' },
+  { id: 4, datum: '', saison: 'Sommer 2025', liga: 'H65 1.Bezirksliga', heimAuswärts: 'Auswärts', mannschaft: 'TSG TC RW Lauda', meineLK: '16,2', gegner: 'Ripp', verein: '', gegnerLK: '15,2', typ: 'Einzel', satz1: '', satz2: '', satz3: '', gesamt: '2:0', ergebnis: 'Sieg', dauer: '', aufschlag: '', asse: '', doppelfehler: '', notizen: '' },
+  { id: 5, datum: '', saison: 'Sommer 2025', liga: 'H65 1.Bezirksliga', heimAuswärts: 'Auswärts', mannschaft: 'TSG TC RW Lauda', meineLK: '16,2', gegner: 'Gräter', verein: '', gegnerLK: '10,1', typ: 'Einzel', satz1: '', satz2: '', satz3: '', gesamt: '0:2', ergebnis: 'Niederlage', dauer: '', aufschlag: '', asse: '', doppelfehler: '', notizen: '' },
+  { id: 6, datum: '', saison: 'Sommer 2023', liga: 'H65 Oberliga', heimAuswärts: '?', mannschaft: 'TSG TC RW Lauda', meineLK: '16,2', gegner: 'Hotz E.', verein: '', gegnerLK: '11,0', typ: 'Einzel', satz1: '', satz2: '', satz3: '', gesamt: '2:1', ergebnis: 'Sieg', dauer: '', aufschlag: '', asse: '', doppelfehler: '', notizen: '' },
+  { id: 7, datum: '', saison: 'Sommer 2023', liga: 'H65 Oberliga', heimAuswärts: '?', mannschaft: 'TSG TC RW Lauda', meineLK: '16,2', gegner: 'Vasovic P.', verein: '', gegnerLK: '?', typ: 'Einzel', satz1: '', satz2: '', satz3: '', gesamt: '1:2', ergebnis: 'Niederlage', dauer: '', aufschlag: '', asse: '', doppelfehler: '', notizen: '' },
+  { id: 8, datum: '', saison: 'Sommer 2023', liga: 'H65 Oberliga', heimAuswärts: '?', mannschaft: 'TSG TC RW Lauda', meineLK: '16,2', gegner: 'Kutsch A.', verein: '', gegnerLK: '9,8', typ: 'Einzel', satz1: '', satz2: '', satz3: '', gesamt: '2:1', ergebnis: 'Sieg', dauer: '', aufschlag: '', asse: '', doppelfehler: '', notizen: '' },
+  { id: 9, datum: '', saison: 'Sommer 2023', liga: 'H65 Oberliga', heimAuswärts: '?', mannschaft: 'TSG TC RW Lauda', meineLK: '16,2', gegner: 'Grether W.', verein: '', gegnerLK: '?', typ: 'Einzel', satz1: '', satz2: '', satz3: '', gesamt: '2:0', ergebnis: 'Sieg', dauer: '', aufschlag: '', asse: '', doppelfehler: '', notizen: '' },
+  { id: 10, datum: '', saison: 'Sommer 2024', liga: 'H65 Oberliga', heimAuswärts: '?', mannschaft: 'TSG TC RW Lauda', meineLK: '16,2', gegner: 'Hintermayer M.', verein: '', gegnerLK: '8,0', typ: 'Einzel', satz1: '', satz2: '', satz3: '', gesamt: '0:2', ergebnis: 'Niederlage', dauer: '', aufschlag: '', asse: '', doppelfehler: '', notizen: '' },
+  { id: 11, datum: '', saison: 'Sommer 2024', liga: 'H65 Oberliga', heimAuswärts: '?', mannschaft: 'TSG TC RW Lauda', meineLK: '16,2', gegner: 'Steger Urban', verein: '', gegnerLK: '13,5', typ: 'Einzel', satz1: '', satz2: '', satz3: '', gesamt: '1:2', ergebnis: 'Niederlage', dauer: '', aufschlag: '', asse: '', doppelfehler: '', notizen: '' },
+];
+
+function loadData() {
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (stored) return JSON.parse(stored);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(SEED_DATA));
+  return SEED_DATA;
+}
+
+function saveData(data) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+function nextId(data) {
+  return data.length ? Math.max(...data.map(d => d.id)) + 1 : 1;
+}
+
+// ═══════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  document.getElementById('nav-' + name).classList.add('active');
+  if (name === 'search') renderSearch();
+  if (name === 'h2h') renderH2H();
+  if (name === 'stats') renderStats();
+}
+
+// ═══════════════════════════════════════════
+//  SEARCH & CARDS
+// ═══════════════════════════════════════════
+function initFilters() {
+  const data = loadData();
+  const saisons = [...new Set(data.map(d => d.saison).filter(Boolean))].sort();
+  const ligen = [...new Set(data.map(d => d.liga).filter(Boolean))].sort();
+  const fS = document.getElementById('filterSaison');
+  const fL = document.getElementById('filterLiga');
+  // Keep first option, rebuild rest
+  fS.innerHTML = '<option value="">Alle Saisons</option>' + saisons.map(s => `<option>${s}</option>`).join('');
+  fL.innerHTML = '<option value="">Alle Ligen</option>' + ligen.map(l => `<option>${l}</option>`).join('');
+}
+
+function renderSearch() {
+  const data = loadData();
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const eFilter = document.getElementById('filterErgebnis').value;
+  const sFilter = document.getElementById('filterSaison').value;
+  const lFilter = document.getElementById('filterLiga').value;
+
+  const filtered = data.filter(m => {
+    const text = [m.gegner, m.liga, m.saison, m.ergebnis, m.verein, m.notizen].join(' ').toLowerCase();
+    if (q && !text.includes(q)) return false;
+    if (eFilter && m.ergebnis !== eFilter) return false;
+    if (sFilter && m.saison !== sFilter) return false;
+    if (lFilter && m.liga !== lFilter) return false;
+    return true;
+  });
+
+  document.getElementById('resultCount').innerHTML = `<strong>${filtered.length}</strong> Begegnung${filtered.length !== 1 ? 'en' : ''}`;
+  const grid = document.getElementById('cardsGrid');
+  const empty = document.getElementById('emptySearch');
+
+  if (!filtered.length) {
+    grid.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  grid.innerHTML = filtered.map(m => matchCard(m)).join('');
+}
+
+function matchCard(m) {
+  const isWin = m.ergebnis === 'Sieg';
+  const datumStr = m.datum ? `<div class="meta-item"><strong>${m.datum}</strong></div>` : '';
+  return `
+  <div class="match-card ${isWin ? '' : 'loss'}" onclick="openDetail(${m.id})">
+    <div class="card-top">
+      <div class="card-opponent">${m.gegner || '–'}</div>
+      <span class="badge ${isWin ? 'win' : 'loss'}">${m.ergebnis}</span>
+    </div>
+    <div class="card-meta">
+      <div class="meta-item">Liga <strong>${m.liga || '–'}</strong></div>
+      <div class="meta-item">Saison <strong>${m.saison || '–'}</strong></div>
+      ${m.heimAuswärts && m.heimAuswärts !== '?' ? `<div class="meta-item">${m.heimAuswärts}</div>` : '<div></div>'}
+      <div class="meta-item">Typ <strong>${m.typ || '–'}</strong></div>
+    </div>
+    <div class="card-score ${isWin ? 'win-score' : 'loss-score'}">${m.gesamt || '–:–'}</div>
+    ${m.gegnerLK && m.gegnerLK !== '?' ? `<div class="lk-pill">Gegner LK ${m.gegnerLK}</div>` : ''}
+  </div>`;
+}
+
+// ═══════════════════════════════════════════
+//  DETAIL MODAL
+// ═══════════════════════════════════════════
+function openDetail(id) {
+  const data = loadData();
+  const m = data.find(x => x.id === id);
+  if (!m) return;
+  const isWin = m.ergebnis === 'Sieg';
+  document.getElementById('modalBody').innerHTML = `
+    <div class="modal-title">${m.gegner || 'Unbekannt'}</div>
+    <div class="modal-subtitle">${[m.saison, m.liga, m.heimAuswärts !== '?' ? m.heimAuswärts : ''].filter(Boolean).join(' · ')}</div>
+
+    <div class="detail-section">
+      <div class="detail-section-label">🏆 Ergebnis</div>
+      <div class="detail-grid">
+        <div class="detail-row">
+          <div class="detail-label">Gesamtergebnis</div>
+          <div class="detail-value highlight ${isWin ? 'win' : 'loss'}" style="color:${isWin ? 'var(--win)' : 'var(--loss)'}">${m.gesamt || '–'}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Sieg / Niederlage</div>
+          <div class="detail-value"><span class="badge ${isWin ? 'win' : 'loss'}">${m.ergebnis}</span></div>
+        </div>
+        ${m.satz1 ? `<div class="detail-row"><div class="detail-label">1. Satz</div><div class="detail-value">${m.satz1}</div></div>` : ''}
+        ${m.satz2 ? `<div class="detail-row"><div class="detail-label">2. Satz</div><div class="detail-value">${m.satz2}</div></div>` : ''}
+        ${m.satz3 ? `<div class="detail-row"><div class="detail-label">3. Satz</div><div class="detail-value">${m.satz3}</div></div>` : ''}
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-label">🎯 Gegner</div>
+      <div class="detail-grid">
+        <div class="detail-row"><div class="detail-label">Name</div><div class="detail-value">${m.gegner || '–'}</div></div>
+        ${m.verein ? `<div class="detail-row"><div class="detail-label">Verein</div><div class="detail-value">${m.verein}</div></div>` : ''}
+        <div class="detail-row"><div class="detail-label">Gegner LK</div><div class="detail-value" style="color:var(--accent2)">${m.gegnerLK || '–'}</div></div>
+        <div class="detail-row"><div class="detail-label">Meine LK</div><div class="detail-value" style="color:var(--accent2)">${m.meineLK || '–'}</div></div>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-label">📅 Kontext</div>
+      <div class="detail-grid">
+        ${m.datum ? `<div class="detail-row"><div class="detail-label">Datum</div><div class="detail-value">${m.datum}</div></div>` : ''}
+        <div class="detail-row"><div class="detail-label">Saison</div><div class="detail-value">${m.saison || '–'}</div></div>
+        <div class="detail-row"><div class="detail-label">Liga</div><div class="detail-value">${m.liga || '–'}</div></div>
+        <div class="detail-row"><div class="detail-label">Heim/Auswärts</div><div class="detail-value">${m.heimAuswärts || '–'}</div></div>
+        <div class="detail-row"><div class="detail-label">Mannschaft</div><div class="detail-value">${m.mannschaft || '–'}</div></div>
+        <div class="detail-row"><div class="detail-label">Typ</div><div class="detail-value">${m.typ || '–'}</div></div>
+      </div>
+    </div>
+
+    ${(m.dauer || m.aufschlag || m.asse || m.doppelfehler) ? `
+    <div class="detail-section">
+      <div class="detail-section-label">📊 Statistik</div>
+      <div class="detail-grid">
+        ${m.dauer ? `<div class="detail-row"><div class="detail-label">Dauer</div><div class="detail-value">${m.dauer} Min</div></div>` : ''}
+        ${m.aufschlag ? `<div class="detail-row"><div class="detail-label">Aufschlag %</div><div class="detail-value">${m.aufschlag}</div></div>` : ''}
+        ${m.asse ? `<div class="detail-row"><div class="detail-label">Asse</div><div class="detail-value">${m.asse}</div></div>` : ''}
+        ${m.doppelfehler ? `<div class="detail-row"><div class="detail-label">Doppelfehler</div><div class="detail-value">${m.doppelfehler}</div></div>` : ''}
+      </div>
+    </div>` : ''}
+
+    ${m.notizen ? `
+    <div class="detail-section">
+      <div class="detail-section-label">📝 Notizen</div>
+      <div class="detail-notes">${m.notizen}</div>
+    </div>` : ''}
+
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:20px; padding-top:16px; border-top:1px solid var(--border)">
+      <button class="btn-secondary" onclick="deleteMatch(${m.id})">🗑 Löschen</button>
+      <button class="btn-primary" onclick="editMatch(${m.id})">✏️ Bearbeiten</button>
+    </div>
+  `;
+  document.getElementById('detailModal').classList.add('open');
+}
+
+function closeDetailModal() {
+  document.getElementById('detailModal').classList.remove('open');
+}
+function closeModal(e) {
+  if (e.target === document.getElementById('detailModal')) closeDetailModal();
+}
+
+function deleteMatch(id) {
+  if (!confirm('Begegnung wirklich löschen?')) return;
+  const data = loadData().filter(m => m.id !== id);
+  saveData(data);
+  closeDetailModal();
+  renderSearch();
+  showToast('Begegnung gelöscht');
+}
+
+function editMatch(id) {
+  const data = loadData();
+  const m = data.find(x => x.id === id);
+  if (!m) return;
+  closeDetailModal();
+  showView('neue');
+  // Populate form
+  document.getElementById('f-datum').value = m.datum || '';
+  document.getElementById('f-saison').value = m.saison || '';
+  document.getElementById('f-liga').value = m.liga || '';
+  document.getElementById('f-heimaus').value = m.heimAuswärts || '';
+  document.getElementById('f-mannschaft').value = m.mannschaft || '';
+  document.getElementById('f-meineLK').value = m.meineLK || '';
+  document.getElementById('f-gegner').value = m.gegner || '';
+  document.getElementById('f-verein').value = m.verein || '';
+  document.getElementById('f-gegnerLK').value = m.gegnerLK || '';
+  document.getElementById('f-typ').value = m.typ || 'Einzel';
+  document.getElementById('f-satz1').value = m.satz1 || '';
+  document.getElementById('f-satz2').value = m.satz2 || '';
+  document.getElementById('f-satz3').value = m.satz3 || '';
+  document.getElementById('f-gesamt').value = m.gesamt || '';
+  document.getElementById('f-ergebnis').value = m.ergebnis || '';
+  document.getElementById('f-dauer').value = m.dauer || '';
+  document.getElementById('f-aufschlag').value = m.aufschlag || '';
+  document.getElementById('f-asse').value = m.asse || '';
+  document.getElementById('f-df').value = m.doppelfehler || '';
+  document.getElementById('f-notizen').value = m.notizen || '';
+  // Mark as editing
+  document.querySelector('.btn-primary').setAttribute('data-edit-id', id);
+  document.querySelector('.btn-primary').textContent = 'Änderungen speichern';
+}
+
+// ═══════════════════════════════════════════
+//  SAVE MATCH
+// ═══════════════════════════════════════════
+function saveMatch() {
+  const gegner = document.getElementById('f-gegner').value.trim();
+  const ergebnis = document.getElementById('f-ergebnis').value;
+  if (!gegner) { showToast('❌ Gegner Name ist Pflichtfeld', true); return; }
+  if (!ergebnis) { showToast('❌ Ergebnis ist Pflichtfeld', true); return; }
+
+  const match = {
+    datum: document.getElementById('f-datum').value,
+    saison: document.getElementById('f-saison').value.trim(),
+    liga: document.getElementById('f-liga').value.trim(),
+    heimAuswärts: document.getElementById('f-heimaus').value,
+    mannschaft: document.getElementById('f-mannschaft').value.trim(),
+    meineLK: document.getElementById('f-meineLK').value.trim(),
+    gegner, verein: document.getElementById('f-verein').value.trim(),
+    gegnerLK: document.getElementById('f-gegnerLK').value.trim(),
+    typ: document.getElementById('f-typ').value,
+    satz1: document.getElementById('f-satz1').value.trim(),
+    satz2: document.getElementById('f-satz2').value.trim(),
+    satz3: document.getElementById('f-satz3').value.trim(),
+    gesamt: document.getElementById('f-gesamt').value.trim(),
+    ergebnis,
+    dauer: document.getElementById('f-dauer').value,
+    aufschlag: document.getElementById('f-aufschlag').value.trim(),
+    asse: document.getElementById('f-asse').value,
+    doppelfehler: document.getElementById('f-df').value,
+    notizen: document.getElementById('f-notizen').value.trim(),
+  };
+
+  const btn = document.querySelector('.btn-primary');
+  const editId = btn.getAttribute('data-edit-id');
+  let data = loadData();
+
+  if (editId) {
+    const idx = data.findIndex(m => m.id == editId);
+    data[idx] = { ...data[idx], ...match };
+    btn.removeAttribute('data-edit-id');
+    btn.textContent = 'Begegnung speichern';
+    showToast('✅ Begegnung aktualisiert');
+  } else {
+    match.id = nextId(data);
+    data.push(match);
+    showToast('✅ Begegnung gespeichert');
+  }
+
+  saveData(data);
+  clearForm();
+  initFilters();
+  showView('search');
+}
+
+function clearForm() {
+  ['f-datum','f-saison','f-liga','f-heimaus','f-mannschaft','f-gegner','f-verein','f-gegnerLK','f-satz1','f-satz2','f-satz3','f-gesamt','f-dauer','f-aufschlag','f-asse','f-df','f-notizen'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('f-meineLK').value = '16,2';
+  document.getElementById('f-typ').value = 'Einzel';
+  document.getElementById('f-ergebnis').value = '';
+  const btn = document.querySelector('.btn-primary');
+  btn.removeAttribute('data-edit-id');
+  btn.textContent = 'Begegnung speichern';
+}
+
+// ═══════════════════════════════════════════
+//  HEAD-TO-HEAD
+// ═══════════════════════════════════════════
+function renderH2H() {
+  const data = loadData();
+  // Group by opponent
+  const map = {};
+  data.forEach(m => {
+    const k = m.gegner || 'Unbekannt';
+    if (!map[k]) map[k] = { gegner: k, lk: m.gegnerLK, matches: [] };
+    map[k].matches.push(m);
+    // Update LK if available
+    if (m.gegnerLK && m.gegnerLK !== '?') map[k].lk = m.gegnerLK;
+  });
+
+  const opponents = Object.values(map).sort((a, b) => b.matches.length - a.matches.length);
+
+  document.getElementById('h2hGrid').innerHTML = opponents.map(op => {
+    const total = op.matches.length;
+    const wins = op.matches.filter(m => m.ergebnis === 'Sieg').length;
+    const losses = total - wins;
+    const pct = total ? Math.round(wins / total * 100) : 0;
+    const winW = total ? Math.round(wins / total * 100) : 0;
+    const lossW = total ? Math.round(losses / total * 100) : 0;
+
+    return `
+    <div class="h2h-card" onclick="openH2H('${op.gegner.replace(/'/g,"\\'")}')">
+      <div class="h2h-name">${op.gegner}</div>
+      <div class="h2h-lk">${op.lk && op.lk !== '?' ? 'LK ' + op.lk : 'LK unbekannt'}</div>
+      <div class="h2h-bars">
+        <div class="h2h-bar-row">
+          <div class="h2h-bar-label">Siege</div>
+          <div class="h2h-bar-track"><div class="h2h-bar-fill win" style="width:${winW}%"></div></div>
+          <div class="h2h-bar-val">${wins}</div>
+        </div>
+        <div class="h2h-bar-row">
+          <div class="h2h-bar-label">Niederlagen</div>
+          <div class="h2h-bar-track"><div class="h2h-bar-fill loss" style="width:${lossW}%"></div></div>
+          <div class="h2h-bar-val">${losses}</div>
+        </div>
+      </div>
+      <div class="h2h-stats-row">
+        <div class="h2h-stat">
+          <div class="h2h-stat-val">${total}</div>
+          <div class="h2h-stat-label">Spiele</div>
+        </div>
+        <div class="h2h-stat">
+          <div class="h2h-stat-val" style="color:${pct >= 50 ? 'var(--win)' : 'var(--loss)'}">${pct}%</div>
+          <div class="h2h-stat-label">Siegquote</div>
+        </div>
+        <div class="h2h-stat">
+          <div class="h2h-stat-val">${wins}:${losses}</div>
+          <div class="h2h-stat-label">Bilanz</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openH2H(name) {
+  const data = loadData();
+  const matches = data.filter(m => m.gegner === name);
+  const wins = matches.filter(m => m.ergebnis === 'Sieg').length;
+  const losses = matches.length - wins;
+  const lk = matches.find(m => m.gegnerLK && m.gegnerLK !== '?')?.gegnerLK || '?';
+
+  document.getElementById('h2hModalBody').innerHTML = `
+    <div class="modal-title">${name}</div>
+    <div class="modal-subtitle">LK ${lk} · ${matches.length} Begegnung${matches.length !== 1 ? 'en' : ''} · Bilanz ${wins}:${losses}</div>
+    <div style="display:flex; gap:12px; margin: 18px 0;">
+      <div class="stat-tile" style="flex:1; padding:14px">
+        <div class="stat-tile-val" style="font-size:22px; color:var(--win)">${wins}</div>
+        <div class="stat-tile-label">Siege</div>
+      </div>
+      <div class="stat-tile" style="flex:1; padding:14px">
+        <div class="stat-tile-val" style="font-size:22px; color:var(--loss)">${losses}</div>
+        <div class="stat-tile-label">Niederlagen</div>
+      </div>
+      <div class="stat-tile" style="flex:1; padding:14px">
+        <div class="stat-tile-val" style="font-size:22px; color:${wins/(wins+losses)>=0.5?'var(--win)':'var(--loss)'}">${matches.length ? Math.round(wins/matches.length*100) : 0}%</div>
+        <div class="stat-tile-label">Quote</div>
+      </div>
+    </div>
+    <div class="detail-section-label" style="margin-top:20px">Alle Begegnungen</div>
+    <div class="h2h-match-list">
+      ${matches.map(m => `
+      <div class="h2h-match-item" onclick="closeH2HModal(); openDetail(${m.id})" style="cursor:pointer">
+        <div>
+          <div style="font-weight:500">${m.saison || '–'} · ${m.liga || '–'}</div>
+          <div style="font-size:12px; color:var(--muted); margin-top:2px">${m.heimAuswärts || ''} ${m.datum ? '· ' + m.datum : ''}</div>
+        </div>
+        <div style="display:flex; gap:12px; align-items:center">
+          <span style="font-family:'DM Mono',monospace; font-size:16px">${m.gesamt || '–'}</span>
+          <span class="badge ${m.ergebnis === 'Sieg' ? 'win' : 'loss'}">${m.ergebnis}</span>
+        </div>
+      </div>`).join('')}
+    </div>
+  `;
+  document.getElementById('h2hModal').classList.add('open');
+}
+
+function closeH2HModal(e) {
+  if (!e || e.target === document.getElementById('h2hModal')) {
+    document.getElementById('h2hModal').classList.remove('open');
+  }
+}
+
+// ═══════════════════════════════════════════
+//  STATISTIK
+// ═══════════════════════════════════════════
+let lkChartInst = null;
+let saisonChartInst = null;
+
+function parseLK(lk) {
+  if (!lk || lk === '?') return null;
+  return parseFloat(String(lk).replace(',', '.'));
+}
+
+function renderStats() {
+  const data = loadData();
+  const total = data.length;
+  const wins = data.filter(m => m.ergebnis === 'Sieg').length;
+  const losses = data.filter(m => m.ergebnis === 'Niederlage').length;
+  const pct = total ? Math.round(wins / total * 100) : 0;
+
+  // Tiles
+  document.getElementById('statTiles').innerHTML = `
+    <div class="stat-tile">
+      <div class="stat-tile-val">${total}</div>
+      <div class="stat-tile-label">Spiele gesamt</div>
+    </div>
+    <div class="stat-tile">
+      <div class="stat-tile-val" style="color:var(--win)">${wins}</div>
+      <div class="stat-tile-label">Siege</div>
+    </div>
+    <div class="stat-tile">
+      <div class="stat-tile-val" style="color:var(--loss)">${losses}</div>
+      <div class="stat-tile-label">Niederlagen</div>
+    </div>
+    <div class="stat-tile">
+      <div class="stat-tile-val" style="color:${pct>=50?'var(--win)':'var(--loss)'}">${pct}%</div>
+      <div class="stat-tile-label">Siegquote</div>
+    </div>
+  `;
+
+  // LK Scatter
+  const withLK = data.filter(m => parseLK(m.gegnerLK) !== null);
+  const winPoints = withLK.filter(m => m.ergebnis === 'Sieg').map(m => ({ x: parseLK(m.gegnerLK), y: 1, label: m.gegner }));
+  const lossPoints = withLK.filter(m => m.ergebnis !== 'Sieg').map(m => ({ x: parseLK(m.gegnerLK), y: 0, label: m.gegner }));
+
+  if (lkChartInst) lkChartInst.destroy();
+  const ctx = document.getElementById('lkChart').getContext('2d');
+  lkChartInst = new Chart(ctx, {
+    type: 'scatter',
+    data: {
+      datasets: [
+        {
+          label: 'Sieg',
+          data: winPoints,
+          backgroundColor: 'rgba(34,197,94,0.7)',
+          pointRadius: 8,
+          pointHoverRadius: 10,
+        },
+        {
+          label: 'Niederlage',
+          data: lossPoints,
+          backgroundColor: 'rgba(239,68,68,0.7)',
+          pointRadius: 8,
+          pointHoverRadius: 10,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { labels: { color: '#94a3b8', font: { family: 'DM Sans' } } },
+        tooltip: {
+          callbacks: {
+            label: ctx => `${ctx.dataset.label}: ${ctx.raw.label} (LK ${ctx.raw.x})`
+          }
+        }
+      },
+      scales: {
+        x: {
+          title: { display: true, text: 'Gegner-LK (niedrig = stark)', color: '#64748b', font: { family: 'DM Sans' } },
+          grid: { color: 'rgba(42,51,72,0.8)' },
+          ticks: { color: '#64748b' },
+          reverse: false,
+        },
+        y: {
+          title: { display: true, text: 'Ergebnis', color: '#64748b', font: { family: 'DM Sans' } },
+          grid: { color: 'rgba(42,51,72,0.8)' },
+          ticks: {
+            color: '#64748b',
+            callback: v => v === 1 ? 'Sieg' : v === 0 ? 'Niederlage' : '',
+            stepSize: 1,
+          },
+          min: -0.3, max: 1.3
+        }
+      }
+    }
+  });
+
+  // LK Zone Table
+  const zones = [
+    { label: '≤ 10 (Stark)', min: 0, max: 10 },
+    { label: '10 – 13', min: 10, max: 13 },
+    { label: '13 – 16', min: 13, max: 16 },
+    { label: '> 16 (Schwach)', min: 16, max: 99 },
+  ];
+  const tbody = document.getElementById('lkTableBody');
+  tbody.innerHTML = zones.map(z => {
+    const zm = data.filter(m => {
+      const lk = parseLK(m.gegnerLK);
+      return lk !== null && lk >= z.min && lk < z.max;
+    });
+    const zw = zm.filter(m => m.ergebnis === 'Sieg').length;
+    const zl = zm.length - zw;
+    const zp = zm.length ? Math.round(zw / zm.length * 100) : '–';
+    const color = typeof zp === 'number' ? (zp >= 50 ? 'var(--win)' : 'var(--loss)') : 'var(--muted)';
+    return `<tr>
+      <td style="font-weight:500">${z.label}</td>
+      <td>${zm.length}</td>
+      <td style="color:var(--win)">${zw}</td>
+      <td style="color:var(--loss)">${zl}</td>
+      <td style="color:${color}; font-family:'DM Mono',monospace; font-weight:500">${typeof zp === 'number' ? zp + '%' : zp}</td>
+    </tr>`;
+  }).join('');
+
+  // Saison Chart
+  const saisonMap = {};
+  data.forEach(m => {
+    const s = m.saison || 'Unbekannt';
+    if (!saisonMap[s]) saisonMap[s] = { w: 0, total: 0 };
+    saisonMap[s].total++;
+    if (m.ergebnis === 'Sieg') saisonMap[s].w++;
+  });
+  const saisonLabels = Object.keys(saisonMap).sort();
+  const saisonPcts = saisonLabels.map(s => saisonMap[s].total ? Math.round(saisonMap[s].w / saisonMap[s].total * 100) : 0);
+
+  if (saisonChartInst) saisonChartInst.destroy();
+  const ctx2 = document.getElementById('saisonChart').getContext('2d');
+  saisonChartInst = new Chart(ctx2, {
+    type: 'bar',
+    data: {
+      labels: saisonLabels,
+      datasets: [{
+        label: 'Siegquote %',
+        data: saisonPcts,
+        backgroundColor: saisonPcts.map(v => v >= 50 ? 'rgba(34,197,94,0.6)' : 'rgba(239,68,68,0.6)'),
+        borderColor: saisonPcts.map(v => v >= 50 ? '#22c55e' : '#ef4444'),
+        borderWidth: 1,
+        borderRadius: 6,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => `${ctx.raw}% Siegquote (${saisonMap[ctx.label].w}/${saisonMap[ctx.label].total})` } }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(42,51,72,0.8)' }, ticks: { color: '#94a3b8', font: { family: 'DM Sans' } } },
+        y: {
+          max: 100, min: 0,
+          grid: { color: 'rgba(42,51,72,0.8)' },
+          ticks: { color: '#64748b', callback: v => v + '%' },
+        }
+      }
+    }
+  });
+}
+
+// ═══════════════════════════════════════════
+//  EXPORT / IMPORT
+// ═══════════════════════════════════════════
+function exportData() {
+  const data = loadData();
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `tennis_matchhistorie_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  showToast('✅ Export erfolgreich');
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const imported = JSON.parse(e.target.result);
+      if (!Array.isArray(imported)) throw new Error('Ungültiges Format');
+      if (confirm(`${imported.length} Begegnungen importieren? Bestehende Daten werden ersetzt.`)) {
+        saveData(imported);
+        initFilters();
+        renderSearch();
+        showToast(`✅ ${imported.length} Begegnungen importiert`);
+      }
+    } catch {
+      showToast('❌ Import fehlgeschlagen – ungültige Datei', true);
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+// ═══════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.borderColor = isError ? 'var(--loss)' : 'var(--accent)';
+  t.style.color = isError ? 'var(--loss)' : 'var(--accent)';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ═══════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════
+initFilters();
+renderSearch();
+</script>
+</body>
+</html>
