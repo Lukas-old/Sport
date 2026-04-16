@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TC RW Lauda – Begegnungsanalyse H70 Gr.165</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0a0f1e; color: #e2e8f0; font-family: 'Segoe UI', sans-serif; }
+    input { font-family: monospace; }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useRef, useEffect } = React;
+
+
+// ─── DATEN ───────────────────────────────────────────────────────────────────
+
+const LAUDA_ROSTER = [
+  { name: "Kleist, F.",      lk: 16.3, jg: 1954 },
+  { name: "Seeliger, R.",    lk: 17.6, jg: 1944 },
+  { name: "Bamberger, K.",   lk: 17.9, jg: 1952 },
+  { name: "Slomka, K.",      lk: 18.0, jg: 1949 },
+  { name: "Weniger, W.",     lk: 21.8, jg: 1952 },
+  { name: "Broens, F.",      lk: 24.3, jg: 1944 },
+  { name: "Schleicher, A.",  lk: 25.0, jg: 1949 },
+  { name: "Zürn, R.",        lk: 25.0, jg: 1955 },
+];
+
+const OPPONENTS = [
+  {
+    name: "TSG SV Seckach/Schlierstadt", short: "Seckach",
+    date: "Di. 12.05.", home: true,
+    players: [
+      { name: "Kanzler, H.",      lk: 18.0, jg: 1949 },
+      { name: "Rothenhöfer, H.",  lk: 18.1, jg: 1949 },
+      { name: "Schmidt, A.",      lk: 19.7, jg: 1950 },
+      { name: "Heilig, H.",       lk: 20.1, jg: 1951 },
+      { name: "Deutsch, E.",      lk: 21.0, jg: 1954 },
+      { name: "Hofmann, L.",      lk: 22.3, jg: 1948 },
+      { name: "Leitz, R.",        lk: 22.7, jg: 1950 },
+      { name: "Schwab, N.",       lk: 24.0, jg: 1951 },
+      { name: "Kolb, E.",         lk: 24.2, jg: 1947 },
+    ],
+  },
+  {
+    name: "TC Hardheim 1960", short: "Hardheim",
+    date: "Di. 19.05.", home: true,
+    players: [
+      { name: "Rusnak, H.-D.",    lk:  7.7, jg: 1956 },
+      { name: "Braun, R.",        lk: 16.4, jg: 1953 },
+      { name: "Schmitt, K.",      lk: 16.7, jg: 1954 },
+      { name: "Seeber, R.",       lk: 19.2, jg: 1952 },
+      { name: "Kruck, R.",        lk: 19.8, jg: 1954 },
+      { name: "Heß, B.",          lk: 20.2, jg: 1953 },
+      { name: "Stingel, K.-H.",   lk: 20.3, jg: 1951 },
+      { name: "Schmider, K.",     lk: 21.9, jg: 1956 },
+      { name: "Hollerbach, W.",   lk: 23.3, jg: 1947 },
+    ],
+  },
+  {
+    name: "TC Waldstadt Mosbach", short: "Waldstadt",
+    date: "Di. 09.06.", home: true,
+    players: [
+      { name: "Rendant, U.",      lk: 16.0, jg: 1953 },
+      { name: "Pudell, G.",       lk: 19.8, jg: 1949 },
+      { name: "Weiß, B.",         lk: 21.1, jg: 1956 },
+      { name: "Wlasack, E.",      lk: 21.6, jg: 1951 },
+      { name: "Schwaab, R.",      lk: 20.3, jg: 1947 },
+      { name: "Graf, H.",         lk: 21.7, jg: 1950 },
+      { name: "Schafferer, F.",   lk: 23.1, jg: 1950 },
+      { name: "Strauß, M.",       lk: 24.9, jg: 1949 },
+    ],
+  },
+  {
+    name: "TC BG Bad Rappenau", short: "Bad Rappenau",
+    date: "Di. 16.06.", home: false,
+    players: [
+      { name: "Weinreuter, P.",   lk: 17.6, jg: 1954 },
+      { name: "Brenner, H.",      lk: 17.7, jg: 1951 },
+      { name: "Keim, U.",         lk: 18.4, jg: 1951 },
+      { name: "Senghaas, H.",     lk: 18.6, jg: 1951 },
+      { name: "Heidrich, H.",     lk: 19.2, jg: 1952 },
+      { name: "Fehr, M.",         lk: 21.1, jg: 1954 },
+      { name: "Gmyrek, T.",       lk: 22.8, jg: 1948 },
+      { name: "Maussner, R.",     lk: 23.4, jg: 1950 },
+      { name: "Czornik, R.",      lk: 24.0, jg: 1954 },
+    ],
+  },
+  {
+    name: "TSG TC Neckargemünd/Dilsberg", short: "Neckargemünd",
+    date: "Di. 23.06.", home: false,
+    players: [
+      { name: "Herrmann, R.",     lk: 10.7, jg: 1949 },
+      { name: "Kaufmann, M.",     lk: 17.1, jg: 1952 },
+      { name: "Lamour, H.W.",     lk: 17.3, jg: 1951 },
+      { name: "Geerlings, H.",    lk: 17.6, jg: 1947 },
+      { name: "Hesse, H.",        lk: 18.7, jg: 1943 },
+      { name: "Dr. Richter, F.",  lk: 19.1, jg: 1956 },
+      { name: "Stippich, W.",     lk: 19.2, jg: 1941 },
+      { name: "M.z.Schwab., H.",  lk: 19.7, jg: 1956 },
+      { name: "Dr. Drisch, D.",   lk: 19.9, jg: 1954 },
+      { name: "Gilles, C.",       lk: 20.3, jg: 1950 },
+      { name: "Weber, H.",        lk: 20.5, jg: 1952 },
+      { name: "Groh, G.",         lk: 21.9, jg: 1956 },
+      { name: "Karow, L.",        lk: 23.4, jg: 1946 },
+    ],
+  },
+];
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+
+function byLK(arr) {
+  return [...arr].sort((a, b) => a.lk - b.lk);
+}
+
+function winProb(lkA, lkB) {
+  return Math.round(100 / (1 + Math.pow(10, -(lkB - lkA) / 4)));
+}
+
+function probStyle(p) {
+  if (p >= 68) return { bg: "#14532d", border: "#166534", text: "#86efac", label: "Favorit" };
+  if (p >= 55) return { bg: "#1a3a20", border: "#166534", text: "#bbf7d0", label: "leicht Fav." };
+  if (p >= 45) return { bg: "#3f2a04", border: "#854d0e", text: "#fde68a", label: "ausgeglichen" };
+  if (p >= 32) return { bg: "#3b0f0f", border: "#7f1d1d", text: "#fca5a5", label: "leicht Außens." };
+  return         { bg: "#2a0606", border: "#450a0a", text: "#f87171", label: "Außenseiter" };
+}
+
+// ─── PLAYER CELL ─────────────────────────────────────────────────────────────
+
+function PlayerCell({ player, roster, onSelect, flip, accent }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handler = e => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const sorted = byLK(roster);
+  const currentRank = sorted.findIndex(p => p.name === player.name) + 1;
+  // Alle anderen Spieler: zuerst Bessere (Rückgängig), dann Schlechtere (Ersatz)
+  const better = sorted.filter(p => p.lk < player.lk);
+  const worse  = sorted.filter(p => p.lk > player.lk || (p.lk === player.lk && p.name !== player.name));
+  const hasOptions = better.length + worse.length > 0;
+
+  const renderRow = (p) => {
+    const diff = p.lk - player.lk;
+    const diffColor = diff < 0 ? "#86efac" : diff > 0 ? "#f87171" : "#94a3b8";
+    const rank = sorted.findIndex(r => r.name === p.name) + 1;
+    return (
+      <div
+        key={p.name}
+        onClick={() => { onSelect(p); setOpen(false); }}
+        style={{
+          display: "flex", justifyContent: "space-between", alignItems: "center",
+          padding: "7px 12px", cursor: "pointer",
+          borderBottom: "1px solid rgba(255,255,255,0.04)",
+        }}
+        onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; }}
+        onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
+      >
+        <div>
+          <div style={{ fontSize: 12, color: "#e2e8f0" }}>{p.name}</div>
+          <div style={{ fontSize: 10, color: "#475569", marginTop: 1 }}>Rang {rank} im Kader</div>
+        </div>
+        <div style={{ textAlign: "right", fontFamily: "monospace", fontSize: 11 }}>
+          <div style={{ color: diffColor, fontWeight: 600 }}>
+            LK {p.lk.toFixed(1)}
+            {diff !== 0 && (
+              <span style={{ fontSize: 10, opacity: 0.75, marginLeft: 3 }}>
+                ({diff > 0 ? "+" : ""}{diff.toFixed(1)})
+              </span>
+            )}
+          </div>
+          <div style={{ color: "#475569" }}>*{p.jg}</div>
+        </div>
+      </div>
+    );
+  };
+
+  const SectionLabel = ({ label, color }) => (
+    <div style={{
+      padding: "4px 12px 3px",
+      fontSize: 9, color, textTransform: "uppercase",
+      letterSpacing: "0.09em",
+      background: "rgba(255,255,255,0.025)",
+      borderBottom: "1px solid rgba(255,255,255,0.05)",
+      position: "sticky", top: 36,
+    }}>
+      {label}
+    </div>
+  );
+
+  return (
+    <div ref={ref} style={{ position: "relative" }}>
+      {/* Trigger */}
+      <div
+        onClick={() => hasOptions && setOpen(v => !v)}
+        style={{
+          display: "flex",
+          flexDirection: flip ? "row-reverse" : "row",
+          alignItems: "center",
+          gap: 5,
+          cursor: hasOptions ? "pointer" : "default",
+          padding: "6px 8px",
+          borderRadius: 8,
+          border: `1px solid ${open ? accent : "rgba(255,255,255,0.09)"}`,
+          background: open ? `${accent}18` : "rgba(255,255,255,0.03)",
+          transition: "border-color 0.15s, background 0.15s",
+          userSelect: "none",
+          minHeight: 50,
+        }}
+      >
+        <div style={{ flex: 1, textAlign: flip ? "right" : "left" }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: "#f1f5f9", lineHeight: 1.3 }}>
+            {player.name}
+          </div>
+          <div style={{ fontSize: 10, color: "#64748b", marginTop: 2, fontFamily: "monospace" }}>
+            LK {player.lk.toFixed(1)} · *{player.jg}
+          </div>
+        </div>
+        {hasOptions && (
+          <div style={{
+            fontSize: 10,
+            color: open ? accent : "#475569",
+            transform: open ? "rotate(180deg)" : "none",
+            transition: "transform 0.18s",
+            lineHeight: 1, flexShrink: 0,
+          }}>▾</div>
+        )}
+      </div>
+
+      {/* Dropdown */}
+      {open && (
+        <div style={{
+          position: "absolute",
+          top: "calc(100% + 4px)",
+          left: flip ? "auto" : 0,
+          right: flip ? 0 : "auto",
+          zIndex: 200,
+          width: 245,
+          background: "#1e293b",
+          border: `1px solid ${accent}55`,
+          borderRadius: 10,
+          boxShadow: "0 12px 40px rgba(0,0,0,0.75)",
+          maxHeight: 320,
+          overflowY: "auto",
+        }}>
+          {/* Sticky header */}
+          <div style={{
+            padding: "7px 12px",
+            fontSize: 10, color: "#475569",
+            textTransform: "uppercase", letterSpacing: "0.09em",
+            borderBottom: "1px solid rgba(255,255,255,0.07)",
+            background: "#1e293b",
+            position: "sticky", top: 0, zIndex: 1,
+          }}>
+            Spieler wechseln · Rang {currentRank} im Kader
+          </div>
+
+          {better.length > 0 && (
+            <>
+              <SectionLabel label="↑ Rückgängig (bessere LK)" color="#86efac" />
+              {better.map(renderRow)}
+            </>
+          )}
+
+          {worse.length > 0 && (
+            <>
+              <SectionLabel label="↓ Ersatz (schlechtere LK)" color="#f87171" />
+              {worse.map(renderRow)}
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── MATCH ROW ────────────────────────────────────────────────────────────────
+
+function MatchRow({ pos, lp, op, oppRoster, onLaudaSelect, onOppSelect, result, onResult }) {
+  const prob = winProb(lp.lk, op.lk);
+  const col  = probStyle(prob);
+
+  return (
+    <div style={{
+      padding: "10px 10px 8px",
+      borderBottom: "1px solid rgba(255,255,255,0.06)",
+      background: pos % 2 === 0 ? "rgba(255,255,255,0.015)" : "transparent",
+    }}>
+      {/* Wahrscheinlichkeits-Balken */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 7 }}>
+        <div style={{
+          width: 22, height: 22, borderRadius: "50%",
+          background: "rgba(255,255,255,0.07)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: 10, fontWeight: 700, color: "#94a3b8", flexShrink: 0,
+        }}>{pos}</div>
+        <div style={{ flex: 1, position: "relative", height: 22 }}>
+          <div style={{
+            position: "absolute", inset: 0,
+            background: "rgba(255,255,255,0.04)", borderRadius: 5,
+          }}>
+            <div style={{
+              position: "absolute", left: 0, top: 0, bottom: 0,
+              width: `${prob}%`, background: col.bg,
+              border: `1px solid ${col.border}`, borderRadius: 5,
+              transition: "width 0.35s ease",
+            }} />
+          </div>
+          <div style={{
+            position: "absolute", inset: 0,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 11, fontWeight: 700, color: col.text,
+            fontFamily: "monospace", gap: 5,
+          }}>
+            <span>{prob}%</span>
+            <span style={{ fontWeight: 400, fontSize: 10, opacity: 0.85 }}>{col.label}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Spielerfelder */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7, marginBottom: 6 }}>
+        <PlayerCell player={lp} roster={LAUDA_ROSTER} onSelect={onLaudaSelect} flip={false} accent="#dc2626" />
+        <PlayerCell player={op} roster={oppRoster}    onSelect={onOppSelect}   flip={true}  accent="#64748b" />
+      </div>
+
+      {/* Ergebnis */}
+      <input
+        type="text" value={result} onChange={e => onResult(e.target.value)}
+        placeholder="Ergebnis  z.B.  6:3  6:4"
+        style={{
+          width: "100%", boxSizing: "border-box",
+          background: "rgba(255,255,255,0.05)",
+          border: "1px solid rgba(255,255,255,0.11)",
+          borderRadius: 6, color: "#e2e8f0",
+          fontSize: 11, padding: "4px 8px",
+          outline: "none", fontFamily: "monospace", textAlign: "center",
+        }}
+      />
+    </div>
+  );
+}
+
+// ─── MATCH VIEW ───────────────────────────────────────────────────────────────
+
+function MatchView({ opp, laudaLineup, oppLineup, onLaudaSelect, onOppSelect, results, onResult }) {
+  const probs = laudaLineup.map((p, i) => winProb(p.lk, oppLineup[i].lk));
+  const avg   = Math.round(probs.reduce((a, b) => a + b) / 4);
+  const exp   = probs.reduce((s, p) => s + p / 100, 0);
+  const col   = probStyle(avg);
+
+  return (
+    <div>
+      {/* Begegnungs-Header */}
+      <div style={{
+        background: "rgba(255,255,255,0.03)", borderRadius: 10,
+        padding: "11px 14px", marginBottom: 10,
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+        border: "1px solid rgba(255,255,255,0.07)",
+      }}>
+        <div>
+          <div style={{ fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 3 }}>
+            {opp.date} · 10:00 Uhr · {opp.home ? "Auswärts" : "Heim"}
+          </div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: "#f1f5f9" }}>
+            {opp.home ? `bei ${opp.short}` : `vs. ${opp.short}`}
+          </div>
+        </div>
+        <div style={{ textAlign: "right" }}>
+          <div style={{ fontSize: 24, fontWeight: 900, color: col.text, fontFamily: "monospace", lineHeight: 1 }}>
+            {avg}%
+          </div>
+          <div style={{ fontSize: 10, color: "#64748b", marginTop: 2 }}>
+            {exp.toFixed(1)} Punkte erw.
+          </div>
+        </div>
+      </div>
+
+      {/* Spaltenbezeichnungen */}
+      <div style={{
+        display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7,
+        padding: "0 10px 5px",
+        fontSize: 10, color: "#475569", textTransform: "uppercase", letterSpacing: "0.08em",
+      }}>
+        <div>🔴 TC RW Lauda</div>
+        <div style={{ textAlign: "right" }}>{opp.short} ⚫</div>
+      </div>
+
+      {/* Zeilen */}
+      <div style={{ borderRadius: 10, border: "1px solid rgba(255,255,255,0.08)" }}>
+        {laudaLineup.map((lp, i) => (
+          <MatchRow
+            key={i} pos={i + 1}
+            lp={lp} op={oppLineup[i]}
+            oppRoster={opp.players}
+            onLaudaSelect={p => onLaudaSelect(i, p)}
+            onOppSelect={p => onOppSelect(i, p)}
+            result={results[i]} onResult={v => onResult(i, v)}
+          />
+        ))}
+      </div>
+
+      <div style={{ fontSize: 10, color: "#334155", marginTop: 6, paddingLeft: 3 }}>
+        ▾ Klick auf Spielernamen · ↑ Rückgängig · ↓ Ersatz · LK-Diff. in (Klammern)
+      </div>
+    </div>
+  );
+}
+
+// ─── HAUPT-APP ────────────────────────────────────────────────────────────────
+
+function initStates() {
+  return OPPONENTS.map(opp => ({
+    lauda: byLK(LAUDA_ROSTER).slice(0, 4),
+    opp:   byLK(opp.players).slice(0, 4),
+  }));
+}
+
+function App() {
+  const [active,  setActive]  = useState(0);
+  const [states,  setStates]  = useState(initStates);
+  const [results, setResults] = useState(OPPONENTS.map(() => ["", "", "", ""]));
+
+  const setLauda = (mi, ri, p) => setStates(prev => {
+    const n = prev.map(s => ({ lauda: [...s.lauda], opp: [...s.opp] }));
+    n[mi].lauda[ri] = p;
+    return n;
+  });
+  const setOpp = (mi, ri, p) => setStates(prev => {
+    const n = prev.map(s => ({ lauda: [...s.lauda], opp: [...s.opp] }));
+    n[mi].opp[ri] = p;
+    return n;
+  });
+  const setResult = (mi, ri, v) => setResults(prev => {
+    const n = prev.map(r => [...r]);
+    n[mi][ri] = v;
+    return n;
+  });
+
+  return (
+    <div style={{
+      minHeight: "100vh", background: "#0a0f1e", color: "#e2e8f0",
+      fontFamily: "'Segoe UI', sans-serif", maxWidth: 680,
+      margin: "0 auto", paddingBottom: 48,
+    }}>
+      {/* Header */}
+      <div style={{
+        padding: "18px 16px 14px",
+        borderBottom: "1px solid rgba(255,255,255,0.07)",
+        background: "linear-gradient(180deg,rgba(220,38,38,.12) 0%,transparent 100%)",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+          <div style={{ width: 9, height: 9, borderRadius: "50%", background: "#dc2626", boxShadow: "0 0 8px #dc2626" }} />
+          <span style={{ fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.12em" }}>
+            BTV · Bezirk 1 · Sommer 2026 · Gr. 165
+          </span>
+        </div>
+        <div style={{ fontSize: 20, fontWeight: 800, color: "#f8fafc", letterSpacing: "-0.02em" }}>
+          TC RW Lauda — Begegnungsanalyse
+        </div>
+        <div style={{ fontSize: 12, color: "#64748b", marginTop: 3 }}>
+          Herren 70 · 4er Staffel · 1. Bezirksliga
+        </div>
+      </div>
+
+      {/* Match-Tabs */}
+      <div style={{
+        display: "flex", overflowX: "auto", gap: 6,
+        padding: "10px 16px",
+        borderBottom: "1px solid rgba(255,255,255,0.07)",
+        scrollbarWidth: "none",
+      }}>
+        {OPPONENTS.map((opp, i) => {
+          const s   = states[i];
+          const avg = Math.round(s.lauda.map((p, j) => winProb(p.lk, s.opp[j].lk)).reduce((a, b) => a + b) / 4);
+          const col = probStyle(avg);
+          const on  = active === i;
+          return (
+            <button key={i} onClick={() => setActive(i)} style={{
+              flexShrink: 0, cursor: "pointer", textAlign: "left", padding: "7px 12px",
+              borderRadius: 8,
+              background: on ? "rgba(220,38,38,.18)" : "rgba(255,255,255,.04)",
+              border:     on ? "1px solid rgba(220,38,38,.5)" : "1px solid rgba(255,255,255,.09)",
+              transition: "all .15s",
+            }}>
+              <div style={{ fontSize: 10, color: "#64748b", marginBottom: 2 }}>{opp.date}</div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: on ? "#f1f5f9" : "#94a3b8" }}>{opp.short}</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: col.text, fontFamily: "monospace" }}>{avg}%</div>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Begegnungsdetail */}
+      <div style={{ padding: "14px 16px" }}>
+        <MatchView
+          opp={OPPONENTS[active]}
+          laudaLineup={states[active].lauda}
+          oppLineup={states[active].opp}
+          onLaudaSelect={(ri, p) => setLauda(active, ri, p)}
+          onOppSelect={(ri, p)   => setOpp(active, ri, p)}
+          results={results[active]}
+          onResult={(ri, v) => setResult(active, ri, v)}
+        />
+      </div>
+
+      {/* Saisonübersicht */}
+      <div style={{ padding: "0 16px" }}>
+        <div style={{ fontSize: 10, color: "#475569", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>
+          Saisonübersicht
+        </div>
+        <div style={{ borderRadius: 10, border: "1px solid rgba(255,255,255,0.08)" }}>
+          {OPPONENTS.map((opp, i) => {
+            const s     = states[i];
+            const probs = s.lauda.map((p, j) => winProb(p.lk, s.opp[j].lk));
+            const avg   = Math.round(probs.reduce((a, b) => a + b) / 4);
+            const exp   = probs.reduce((s, p) => s + p / 100, 0);
+            const col   = probStyle(avg);
+            return (
+              <div key={i} onClick={() => setActive(i)} style={{
+                display: "grid", gridTemplateColumns: "1fr auto auto", gap: 10,
+                alignItems: "center", padding: "10px 14px", cursor: "pointer",
+                borderBottom: i < 4 ? "1px solid rgba(255,255,255,0.06)" : "none",
+                background: active === i ? "rgba(220,38,38,.07)" : "transparent",
+              }}>
+                <div>
+                  <div style={{ fontSize: 11, color: "#64748b", marginBottom: 2 }}>
+                    {opp.date} · {opp.home ? "Ausw." : "Heim"}
+                  </div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: "#e2e8f0" }}>{opp.name}</div>
+                </div>
+                <div style={{ fontSize: 11, color: "#64748b", fontFamily: "monospace" }}>
+                  {exp.toFixed(1)} erw.
+                </div>
+                <div style={{
+                  background: col.bg, border: `1px solid ${col.border}`,
+                  borderRadius: 6, padding: "4px 8px",
+                  fontSize: 13, fontWeight: 800, color: col.text,
+                  fontFamily: "monospace", minWidth: 44, textAlign: "center",
+                }}>
+                  {avg}%
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div style={{ fontSize: 10, color: "#334155", marginTop: 10, textAlign: "center" }}>
+          Badischer Tennisverband · BTV Bezirk 1 · Sommer 2026
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
