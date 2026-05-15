@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TC RW Lauda – Begegnungsanalyse H70 Bezirksliga Gr.165</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.6.0/jspdf.plugin.autotable.min.js"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#0a0f1e;color:#e2e8f0;font-family:'Segoe UI',sans-serif}
+    input,textarea,select{font-family:inherit}
+    ::-webkit-scrollbar{width:4px;height:4px}
+    ::-webkit-scrollbar-track{background:transparent}
+    ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:2px}
+    textarea{resize:vertical}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const{useState,useRef,useEffect}=React;
+
+const LAUDA_ROSTER_DEFAULT=[
+  {name:"Kleist, F. \u2605",  lk:16.3,jg:1954},
+  {name:"Seeliger, R.",   lk:17.6,jg:1944},
+  {name:"Bamberger, K.",  lk:17.9,jg:1952},
+  {name:"Slomka, K.",     lk:18.0,jg:1949},
+  {name:"Weniger, W.",    lk:21.8,jg:1952},
+  {name:"Broens, F.",     lk:24.3,jg:1944},
+  {name:"Schleicher, A.", lk:25.0,jg:1949},
+  {name:"Z\u00fcrn, R.",       lk:25.0,jg:1955},
+];
+const OPPONENTS=[
+  {name:"TSG SV Seckach/Schlierstadt",short:"Seckach",date:"Di. 12.05.",home:false,players:[
+    {name:"Kanzler, H.",lk:18.0,jg:1949},{name:"Rottenh\u00f6fer, H.",lk:18.1,jg:1949},
+    {name:"Schmidt, A.",lk:19.7,jg:1950},{name:"Heilig, H.",lk:20.1,jg:1951},
+    {name:"Deutsch, E.",lk:21.0,jg:1954},{name:"Hofmann, L.",lk:22.3,jg:1948},
+    {name:"Leitz, R.",lk:22.7,jg:1950},{name:"Schwab, N.",lk:24.0,jg:1951},
+    {name:"Kolb, E.",lk:24.2,jg:1947},
+  ]},
+  {name:"TC Hardheim 1960",short:"Hardheim",date:"Di. 19.05.",home:false,players:[
+    {name:"Rusnak, H.-D.",lk:7.7,jg:1956},{name:"Braun, R.",lk:16.4,jg:1953},
+    {name:"Schmitt, K.",lk:16.7,jg:1954},{name:"Seeber, R.",lk:19.2,jg:1952},
+    {name:"Kruck, R.",lk:19.8,jg:1954},{name:"He\u00df, B.",lk:20.2,jg:1953},
+    {name:"Stingel, K.-H.",lk:20.3,jg:1951},{name:"Schmider, K.",lk:21.9,jg:1956},
+    {name:"Hollerbach, W.",lk:23.3,jg:1947},
+  ]},
+  {name:"TC Waldstadt Mosbach",short:"Waldstadt",date:"Di. 09.06.",home:false,players:[
+    {name:"Rendant, U.",lk:16.0,jg:1953},{name:"Pudell, G.",lk:19.8,jg:1949},
+    {name:"Schwaab, R.",lk:20.3,jg:1947},{name:"Wei\u00df, B.",lk:21.1,jg:1956},
+    {name:"Graf, H.",lk:21.7,jg:1950},{name:"Wlasack, E.",lk:21.6,jg:1951},
+    {name:"Schafferer, F.",lk:23.1,jg:1950},{name:"Strau\u00df, M.",lk:24.9,jg:1949},
+  ]},
+  {name:"TC BG Bad Rappenau",short:"Bad Rappenau",date:"Di. 16.06.",home:true,players:[
+    {name:"Weinreuter, P.",lk:17.6,jg:1954},{name:"Brenner, H.",lk:17.7,jg:1951},
+    {name:"Keim, U.",lk:18.4,jg:1951},{name:"Senghaas, H.",lk:18.6,jg:1951},
+    {name:"Heidrich, H.",lk:19.2,jg:1952},{name:"Fehr, M.",lk:21.1,jg:1954},
+    {name:"Gmyrek, T.",lk:22.8,jg:1948},{name:"Maussner, R.",lk:23.4,jg:1950},
+    {name:"Czornik, R.",lk:24.0,jg:1954},
+  ]},
+  {name:"TSG TC Neckargem\u00fcnd/Dilsberg",short:"Neckargem\u00fcnd",date:"Di. 23.06.",home:true,players:[
+    {name:"Herrmann, R.",lk:10.7,jg:1949},{name:"Kaufmann, M.",lk:17.1,jg:1952},
+    {name:"Lamour, H.W.",lk:18.5,jg:1950},{name:"Spieler 4 \u26a0",lk:20.0,jg:1950},
+    {name:"Spieler 5 \u26a0",lk:21.0,jg:1951},{name:"Spieler 6 \u26a0",lk:22.0,jg:1952},
+    {name:"Spieler 7 \u26a0",lk:23.0,jg:1948},{name:"Spieler 8 \u26a0",lk:24.0,jg:1949},
+  ]},
+];
+const OPP_PLAYERS_DEFAULT=OPPONENTS.map(o=>o.players.map(p=>({...p})));
+
+const NS=4,ND=2,AC="#dc2626",TEAM_CLR="#fca5a5";
+const SK={L:"la26-lineups",R:"la26-results",N:"la26-notes",D:"la26-doubles",
+  DR:"la26-dbl-results",CR:"la26-custom-roster",CO:"la26-custom-opp"};
+
+const byLK=arr=>[...arr].sort((a,b)=>a.lk-b.lk);
+const winProb=(a,b)=>Math.round(100/(1+Math.pow(10,-(b-a)/4)));
+const avgLK=pair=>pair[0]&&pair[1]?(pair[0].lk+pair[1].lk)/2:null;
+const pStyle=p=>{
+  if(p>=68)return{bg:"#14532d",bdr:"#166534",txt:"#86efac",lbl:"Favorit"};
+  if(p>=55)return{bg:"#1a3a20",bdr:"#166534",txt:"#bbf7d0",lbl:"leicht Fav."};
+  if(p>=45)return{bg:"#3f2a04",bdr:"#854d0e",txt:"#fde68a",lbl:"ausgeglichen"};
+  if(p>=32)return{bg:"#3b0f0f",bdr:"#7f1d1d",txt:"#fca5a5",lbl:"leicht Au\u00dfens."};
+  return{bg:"#2a0606",bdr:"#450a0a",txt:"#f87171",lbl:"Au\u00dfenseiter"};
+};
+function parseResult(s){
+  if(!s||!s.trim())return null;
+  if(/^wo$/i.test(s.trim()))return'L';
+  const sets=s.trim().split(/\s+/);let w=0,l=0;
+  for(const t of sets){const m=t.match(/^(\d+)[:\-](\d+)$/);if(!m)return null;+m[1]>+m[2]?w++:+m[2]>+m[1]?l++:null;}
+  return w>l?'W':l>w?'L':null;
+}
+function parseMD(ds){const m=ds.match(/(\d{2})\.(\d{2})\./);if(!m)return null;const d=new Date(2026,+m[2]-1,+m[1]);d.setHours(0,0,0,0);return d;}
+function isToday(ds){const d=parseMD(ds);if(!d)return false;const n=new Date();n.setHours(0,0,0,0);return d.getTime()===n.getTime();}
+function initActive(){
+  const t=new Date();t.setHours(0,0,0,0);
+  for(let i=0;i<OPPONENTS.length;i++){const d=parseMD(OPPONENTS[i].date);if(d&&d.getTime()===t.getTime())return i;}
+  for(let i=0;i<OPPONENTS.length;i++){const d=parseMD(OPPONENTS[i].date);if(d&&d>=t)return i;}
+  return OPPONENTS.length-1;
+}
+const emptyPairs=()=>[[null,null],[null,null]];
+function defStates(r,op){return OPPONENTS.map((o,i)=>({lauda:byLK(r||LAUDA_ROSTER_DEFAULT).slice(0,NS),opp:byLK((op||OPP_PLAYERS_DEFAULT)[i]).slice(0,NS)}));}
+function defDoubles(){return OPPONENTS.map(()=>({pairs:emptyPairs(),oppPairs:emptyPairs()}));}
+
+const stor=window.storage||{get:async k=>{try{const v=localStorage.getItem(k);return v?{value:v}:null;}catch{return null;}},set:async(k,v)=>{try{localStorage.setItem(k,v);}catch{}},};
+const saveAll=(key,data)=>stor.set(key,JSON.stringify(data)).catch(()=>{});
+
+async function loadAll(){
+  const st={states:defStates(),results:OPPONENTS.map(()=>Array(NS).fill("")),notes:OPPONENTS.map(()=>""),doubles:defDoubles(),doublesResults:OPPONENTS.map(()=>["",""]),rosterData:LAUDA_ROSTER_DEFAULT.map(p=>({...p})),oppPlayerData:OPP_PLAYERS_DEFAULT.map(a=>a.map(p=>({...p})))};
+  try{
+    const vals=await Promise.all([SK.L,SK.R,SK.N,SK.D,SK.DR,SK.CR,SK.CO].map(k=>stor.get(k).catch(()=>null)));
+    const[sl,rl,nl,dl,drl,cr,co]=vals;
+    if(cr){try{const v=JSON.parse(cr.value);if(Array.isArray(v)&&v.length>0)st.rosterData=v;}catch{}}
+    if(co){try{const v=JSON.parse(co.value);if(Array.isArray(v)&&v.length===OPPONENTS.length)st.oppPlayerData=v;}catch{}}
+    if(sl){const sv=JSON.parse(sl.value);if(sv?.length===OPPONENTS.length){st.states=OPPONENTS.map((o,i)=>{
+      const ls=(sv[i]?.lauda||[]).map(n=>st.rosterData.find(p=>p.name===n)).filter(Boolean);
+      const os=(sv[i]?.opp||[]).map(n=>st.oppPlayerData[i].find(p=>p.name===n)).filter(Boolean);
+      return ls.length===NS&&os.length===NS?{lauda:ls,opp:os}:{lauda:byLK(st.rosterData).slice(0,NS),opp:byLK(st.oppPlayerData[i]).slice(0,NS)};});}}
+    if(rl){const rv=JSON.parse(rl.value);if(rv?.length===OPPONENTS.length)st.results=rv;}
+    if(nl){const nv=JSON.parse(nl.value);if(nv?.length===OPPONENTS.length)st.notes=nv;}
+    if(dl){const dv=JSON.parse(dl.value);if(dv?.length===OPPONENTS.length){st.doubles=OPPONENTS.map((o,i)=>{try{
+      const res=(names,roster)=>names.map(n=>n?roster.find(p=>p.name===n)||null:null);
+      const s=dv[i];
+      const pr=(s.pairs||[]).concat([[null,null],[null,null]]).slice(0,ND);
+      const or_=(s.oppPairs||[]).concat([[null,null],[null,null]]).slice(0,ND);
+      return{pairs:pr.map(p=>res(p,st.rosterData)),oppPairs:or_.map(p=>res(p,st.oppPlayerData[i]))};
+    }catch{return defDoubles()[i];}});}}
+    if(drl){const drv=JSON.parse(drl.value);if(drv?.length===OPPONENTS.length)st.doublesResults=drv.map(r=>r.length>=ND?r.slice(0,ND):[...r,...Array(ND-r.length).fill("")]);}
+  }catch{}
+  return st;
+}
+
+function generatePDF(opp,lL,oL,results,notes,dbl,dblResults){
+  const{jsPDF}=window.jspdf;const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  doc.setFillColor(180,20,20);doc.rect(0,0,210,30,'F');
+  doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(16);doc.text('TC RW LAUDA',14,13);
+  doc.setFont('helvetica','normal');doc.setFontSize(9);doc.text('Herren 70  |  Bezirksliga Gr. 165  |  BTV Baden Sommer 2026',14,21);
+  doc.setFont('helvetica','bold');doc.setFontSize(12);doc.text('SPIELBERICHT',196,18,{align:'right'});
+  doc.setFillColor(243,246,250);doc.roundedRect(14,35,182,32,2,2,'F');
+  doc.setTextColor(30,30,30);doc.setFont('helvetica','bold');doc.setFontSize(9.5);
+  doc.text('Datum:',18,44);doc.text('Heimmannschaft:',18,52);doc.text('Gastmannschaft:',18,59);
+  doc.setFont('helvetica','normal');
+  const isAway=!opp.home;
+  doc.text(opp.date.replace('Di. ','')+' 2026  \u00b7  10:00 Uhr',55,44);
+  doc.text(isAway?opp.name:'TC RW Lauda',55,52);
+  doc.text(isAway?'TC RW Lauda':opp.name,55,59);
+  const sW=results.filter(r=>parseResult(r)==='W').length,sL=results.filter(r=>parseResult(r)==='L').length;
+  const dW=dblResults.filter(r=>parseResult(r)==='W').length,dLos=dblResults.filter(r=>parseResult(r)==='L').length;
+  const tw=sW+dW,tl=sL+dLos;
+  doc.setFont('helvetica','bold');doc.setFontSize(13);
+  doc.setTextColor(tw>tl?20:tw<tl?180:80,tw>tl?120:tw<tl?20:80,tw>tl?60:20);
+  doc.text(tw+' : '+tl,178,52,{align:'right'});
+  doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(100,100,100);
+  doc.text('(E: '+sW+':'+sL+'  D: '+dW+':'+dLos+')',178,59,{align:'right'});
+  const singHead=[['#','Heim','Gast','Ergebnis','P']];
+  const singBody=lL.map((lp,i)=>{
+    const op=oL[i],res=results[i]||'',wl=parseResult(res);
+    const lN=isAway?op.name:lp.name,rN=isAway?lp.name:op.name;
+    const prob=winProb(lp.lk,op.lk);
+    return[String(i+1),lN,rN,res||'\u2014',wl==='W'?'S':wl==='L'?(/^wo$/i.test(res.trim())?'WO':'N'):prob+'%'];
+  });
+  doc.autoTable({head:singHead,body:singBody,startY:72,theme:'grid',headStyles:{fillColor:[180,20,20],textColor:255,fontSize:8,fontStyle:'bold'},bodyStyles:{fontSize:8},columnStyles:{0:{cellWidth:8,halign:'center'},1:{cellWidth:52},2:{cellWidth:52},3:{cellWidth:30,halign:'center'},4:{cellWidth:12,halign:'center'}},didParseCell:d=>{if(d.section==='body'&&d.column.index===4){const v=d.cell.raw;if(v==='S')d.cell.styles.textColor=[20,150,60];else if(v==='N'||v==='WO')d.cell.styles.textColor=[200,30,30];}}});
+  const dblHead=[['Doppel','Heim','Gast','Ergebnis','P']];
+  const dblBody=[0,1].map(di=>{
+    const lPair=isAway?dbl.oppPairs[di]:dbl.pairs[di],rPair=isAway?dbl.pairs[di]:dbl.oppPairs[di];
+    const lN=(lPair[0]?.name||'?')+' / '+(lPair[1]?.name||'?');
+    const rN=(rPair[0]?.name||'?')+' / '+(rPair[1]?.name||'?');
+    const res=dblResults[di]||'',wl=parseResult(res);
+    const aL_=avgLK(dbl.pairs[di]),aO=avgLK(dbl.oppPairs[di]);
+    const probStr=(aL_!==null&&aO!==null)?winProb(aL_,aO)+'%':'\u2014';
+    return['D'+(di+1),lN,rN,res||'\u2014',wl==='W'?'S':wl==='L'?(/^wo$/i.test(res.trim())?'WO':'N'):probStr];
+  });
+  const afterY=doc.lastAutoTable.finalY+4;
+  doc.autoTable({head:dblHead,body:dblBody,startY:afterY,theme:'grid',headStyles:{fillColor:[180,20,20],textColor:255,fontSize:8,fontStyle:'bold'},bodyStyles:{fontSize:8},columnStyles:{0:{cellWidth:12,halign:'center'},1:{cellWidth:52},2:{cellWidth:52},3:{cellWidth:22,halign:'center'},4:{cellWidth:12,halign:'center'}},didParseCell:d=>{if(d.section==='body'&&d.column.index===4){const v=d.cell.raw;if(v==='S')d.cell.styles.textColor=[20,150,60];else if(v==='N'||v==='WO')d.cell.styles.textColor=[200,30,30];}}});
+  if(notes&&notes.trim()){const ny=doc.lastAutoTable.finalY+6;doc.setFontSize(8);doc.setTextColor(80,80,80);doc.setFont('helvetica','bold');doc.text('Notizen:',14,ny);doc.setFont('helvetica','normal');doc.text(notes,14,ny+5,{maxWidth:182});}
+  const sy=265;doc.setDrawColor(180,180,180);doc.setLineWidth(0.3);
+  doc.line(14,sy,88,sy);doc.line(108,sy,182,sy);doc.setFontSize(8);doc.setTextColor(100,100,100);
+  doc.text('Unterschrift Heimmannschaft',51,sy+5,{align:'center'});doc.text('Unterschrift Gastmannschaft',145,sy+5,{align:'center'});
+  doc.line(14,sy+16,88,sy+16);doc.text('Ort, Datum',51,sy+21,{align:'center'});
+  doc.setFontSize(7);doc.setTextColor(160,160,160);
+  doc.text('Erstellt am '+new Date().toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'})+'  |  TC RW Lauda \u00b7 BTV Bezirksliga H70 Gr. 165',105,290,{align:'center'});
+  doc.save('Protokoll_Lauda_'+opp.short.replace(/[\s\/]+/g,'_')+'_'+opp.date.replace('Di. ','').replace(/\./g,'').trim()+'.pdf');
+}
+
+function PlayerEditRow({p,onChange,onRemove}){
+  const IS={background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:5,color:"#e2e8f0",fontSize:11,padding:"4px 6px",outline:"none"};
+  return(<div style={{display:"grid",gridTemplateColumns:"1fr 52px 52px 28px",gap:4,marginBottom:4,alignItems:"center"}}>
+    <input value={p.name} onChange={e=>onChange('name',e.target.value)} style={IS}/>
+    <input type="number" value={p.lk} step="0.1" min="1" max="30" onChange={e=>{const v=parseFloat(e.target.value);if(!isNaN(v))onChange('lk',v);}} style={{...IS,textAlign:"center"}}/>
+    <input type="number" value={p.jg} min="1935" max="1980" onChange={e=>{const v=parseInt(e.target.value);if(!isNaN(v))onChange('jg',v);}} style={{...IS,textAlign:"center"}}/>
+    <button onClick={onRemove} style={{background:"rgba(239,68,68,0.15)",border:"1px solid rgba(239,68,68,0.3)",borderRadius:5,color:"#f87171",cursor:"pointer",fontSize:13,lineHeight:1,padding:"4px 0"}}>&#x2715;</button>
+  </div>);
+}
+
+function EditModal({onClose,rosterData,setRosterData,oppPlayerData,setOppPlayerData}){
+  const[tab,setTab]=useState('home');
+  const[oIdx,setOIdx]=useState(0);
+  const BB={cursor:"pointer",borderRadius:6,fontSize:11,padding:"5px 11px",border:"1px solid"};
+  const updH=(i,f,v)=>setRosterData(prev=>{const n=[...prev];n[i]={...n[i],[f]:v};return n;});
+  const remH=(i)=>setRosterData(prev=>prev.length>1?prev.filter((_,j)=>j!==i):prev);
+  const addH=()=>setRosterData(prev=>[...prev,{name:"Neuer Spieler",lk:20.0,jg:1955}]);
+  const rstH=()=>setRosterData(LAUDA_ROSTER_DEFAULT.map(p=>({...p})));
+  const updO=(pi,f,v)=>setOppPlayerData(prev=>{const n=prev.map(m=>[...m]);n[oIdx][pi]={...n[oIdx][pi],[f]:v};return n;});
+  const remO=(pi)=>setOppPlayerData(prev=>{const n=prev.map(m=>[...m]);if(n[oIdx].length>1)n[oIdx]=n[oIdx].filter((_,j)=>j!==pi);return n;});
+  const addO=()=>setOppPlayerData(prev=>{const n=prev.map(m=>[...m]);n[oIdx]=[...n[oIdx],{name:"Neuer Spieler",lk:20.0,jg:1955}];return n;});
+  const rstO=()=>setOppPlayerData(prev=>{const n=[...prev];n[oIdx]=OPP_PLAYERS_DEFAULT[oIdx].map(p=>({...p}));return n;});
+  const SS={background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:6,color:"#e2e8f0",fontSize:11,padding:"6px 8px",outline:"none",width:"100%",marginBottom:10};
+  return(<div style={{position:"fixed",inset:0,zIndex:500,background:"rgba(0,0,10,0.82)",display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"16px 12px",overflowY:"auto"}}>
+    <div style={{width:"100%",maxWidth:640,background:"#0f172a",borderRadius:12,border:"1px solid rgba(255,255,255,0.14)",boxShadow:"0 24px 64px rgba(0,0,0,0.85)"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"13px 16px",borderBottom:"1px solid rgba(255,255,255,0.08)"}}>
+        <div style={{fontSize:14,fontWeight:700,color:"#f1f5f9"}}>&#x270e; Kader / Nennungen bearbeiten</div>
+        <button onClick={onClose} style={{background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:6,color:"#94a3b8",cursor:"pointer",fontSize:13,padding:"3px 9px"}}>&#x2715;</button>
+      </div>
+      <div style={{display:"flex",gap:6,padding:"10px 16px",borderBottom:"1px solid rgba(255,255,255,0.08)"}}>
+        {[['home','Eigener Kader'],['opp','Gegner-Kader']].map(([k,l])=>(
+          <button key={k} onClick={()=>setTab(k)} style={{...BB,background:tab===k?"rgba(255,255,255,0.1)":"rgba(255,255,255,0.04)",borderColor:tab===k?"rgba(255,255,255,0.25)":"rgba(255,255,255,0.1)",color:tab===k?"#f1f5f9":"#64748b",fontWeight:tab===k?600:400}}>{l}</button>
+        ))}
+      </div>
+      <div style={{padding:"12px 16px",maxHeight:"62vh",overflowY:"auto"}}>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 52px 52px 28px",gap:4,marginBottom:7,paddingBottom:5,borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
+          {["Name","LK","Jg.",""].map((h,i)=><div key={i} style={{fontSize:9,color:"#475569",textTransform:"uppercase",letterSpacing:"0.08em",textAlign:i===0?"left":"center"}}>{h}</div>)}
+        </div>
+        {tab==='home'?(<div>
+          {rosterData.map((p,i)=><PlayerEditRow key={i} p={p} onChange={(f,v)=>updH(i,f,v)} onRemove={()=>remH(i)}/>)}
+          <div style={{display:"flex",gap:8,marginTop:10}}>
+            <button onClick={addH} style={{...BB,background:"rgba(220,38,38,0.12)",borderColor:"rgba(220,38,38,0.3)",color:"#fca5a5"}}>+ Spieler</button>
+            <button onClick={rstH} style={{...BB,background:"rgba(255,255,255,0.05)",borderColor:"rgba(255,255,255,0.12)",color:"#64748b"}}>&#x21ba; Standard</button>
+          </div>
+        </div>):(<div>
+          <select value={oIdx} onChange={e=>setOIdx(+e.target.value)} style={SS}>
+            {OPPONENTS.map((o,i)=><option key={i} value={i}>{o.date} &#x2013; {o.name}</option>)}
+          </select>
+          {oppPlayerData[oIdx].map((p,pi)=><PlayerEditRow key={pi} p={p} onChange={(f,v)=>updO(pi,f,v)} onRemove={()=>remO(pi)}/>)}
+          <div style={{display:"flex",gap:8,marginTop:10}}>
+            <button onClick={addO} style={{...BB,background:"rgba(220,38,38,0.12)",borderColor:"rgba(220,38,38,0.3)",color:"#fca5a5"}}>+ Spieler</button>
+            <button onClick={rstO} style={{...BB,background:"rgba(255,255,255,0.05)",borderColor:"rgba(255,255,255,0.12)",color:"#64748b"}}>&#x21ba; Standard</button>
+          </div>
+        </div>)}
+      </div>
+      <div style={{padding:"9px 16px",borderTop:"1px solid rgba(255,255,255,0.07)",fontSize:10,color:"#334155",textAlign:"center"}}>&#xc4;nderungen werden sofort &#xfc;bernommen und gespeichert</div>
+    </div>
+  </div>);
+}
+
+function PairMemberPicker({player,roster,onSelect,flip,usedNames=[]}){
+  const[open,setOpen]=useState(false);const ref=useRef(null);
+  useEffect(()=>{const h=e=>{if(ref.current&&!ref.current.contains(e.target))setOpen(false);};document.addEventListener("mousedown",h);return()=>document.removeEventListener("mousedown",h);},[]);
+  const isNull=!player,isK=player?.name?.includes("\u2605");const acc=flip?"#64748b":AC;
+  return(<div ref={ref} style={{position:"relative"}}>
+    <div onClick={()=>setOpen(v=>!v)} style={{display:"flex",flexDirection:flip?"row-reverse":"row",alignItems:"center",gap:4,cursor:"pointer",padding:"4px 7px",borderRadius:6,minHeight:36,
+      border:"1px solid "+(open?(isNull?"#475569":acc):isNull?"rgba(255,255,255,0.12)":isK?AC+"66":"rgba(255,255,255,0.09)"),
+      background:open?(isNull?"rgba(255,255,255,0.06)":acc+"18"):isNull?"rgba(255,255,255,0.02)":isK?AC+"0d":"rgba(255,255,255,0.03)",userSelect:"none",transition:"all 0.15s"}}>
+      <div style={{flex:1,textAlign:flip?"right":"left"}}>
+        {isNull?<div style={{fontSize:11,color:"#475569",fontStyle:"italic",lineHeight:2}}>&#x2014; Spieler w&#xe4;hlen &#x2014;</div>
+          :<><div style={{fontSize:11,fontWeight:600,color:isK?TEAM_CLR:"#f1f5f9",lineHeight:1.2}}>{player.name}</div>
+            <div style={{fontSize:9,color:"#64748b",fontFamily:"monospace"}}>LK {player.lk.toFixed(1)}  *{player.jg}</div></>}
+      </div>
+      <div style={{fontSize:9,color:open?(isNull?"#64748b":acc):"#475569",transform:open?"rotate(180deg)":"none",transition:"transform 0.18s"}}>&#x25be;</div>
+    </div>
+    {open&&(<div style={{position:"absolute",top:"calc(100% + 3px)",left:flip?"auto":0,right:flip?0:"auto",zIndex:300,width:215,background:"#1e293b",border:"1px solid "+acc+"55",borderRadius:10,boxShadow:"0 12px 40px rgba(0,0,0,0.75)",maxHeight:270,overflowY:"auto"}}>
+      <div style={{padding:"5px 11px",fontSize:9.5,color:"#475569",textTransform:"uppercase",letterSpacing:"0.09em",borderBottom:"1px solid rgba(255,255,255,0.07)",background:"#1e293b",position:"sticky",top:0}}>Spieler w&#xe4;hlen</div>
+      {byLK(roster).map(p=>{
+        const iU=usedNames.includes(p.name)&&(!player||p.name!==player.name),iC=player&&p.name===player.name;
+        return(<div key={p.name} onClick={()=>{if(!iU){onSelect(p);setOpen(false);}}}
+          style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 11px",cursor:iU?"not-allowed":"pointer",opacity:iU?0.3:1,borderBottom:"1px solid rgba(255,255,255,0.04)",background:iC?acc+"20":"transparent"}}
+          onMouseEnter={e=>{if(!iU)e.currentTarget.style.background="rgba(255,255,255,0.08)";}}
+          onMouseLeave={e=>{e.currentTarget.style.background=iC?acc+"20":"transparent";}}>
+          <div style={{fontSize:11,color:"#e2e8f0"}}>{p.name}</div>
+          <div style={{fontSize:9.5,color:"#64748b",fontFamily:"monospace"}}>LK {p.lk.toFixed(1)}</div>
+        </div>);
+      })}
+    </div>)}
+  </div>);
+}
+
+function PlayerCell({player,roster,onSelect,flip,accent}){
+  const[open,setOpen]=useState(false);const ref=useRef(null);
+  useEffect(()=>{const h=e=>{if(ref.current&&!ref.current.contains(e.target))setOpen(false);};document.addEventListener("mousedown",h);return()=>document.removeEventListener("mousedown",h);},[]);
+  const sorted=byLK(roster),better=sorted.filter(p=>p.lk<player.lk),worse=sorted.filter(p=>p.lk>player.lk||(p.lk===player.lk&&p.name!==player.name));
+  const hasOpts=better.length+worse.length>0,curRank=sorted.findIndex(p=>p.name===player.name)+1;
+  const isK=player.name.includes("\u2605");
+  const Row=p=>{const diff=p.lk-player.lk,dc=diff<0?"#86efac":diff>0?"#f87171":"#94a3b8",rk=sorted.findIndex(r=>r.name===p.name)+1;
+    return(<div key={p.name} onClick={()=>{onSelect(p);setOpen(false);}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"7px 12px",cursor:"pointer",borderBottom:"1px solid rgba(255,255,255,0.04)"}}
+      onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.08)"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+      <div><div style={{fontSize:12,color:"#e2e8f0"}}>{p.name}</div><div style={{fontSize:10,color:"#475569",marginTop:1}}>Rang {rk}</div></div>
+      <div style={{textAlign:"right",fontFamily:"monospace",fontSize:11}}>
+        <div style={{color:dc,fontWeight:600}}>LK {p.lk.toFixed(1)}{diff!==0&&<span style={{fontSize:10,opacity:.75,marginLeft:3}}>({diff>0?"+":""}{diff.toFixed(1)})</span>}</div>
+        <div style={{color:"#475569"}}>*{p.jg}</div>
+      </div>
+    </div>);};
+  const SL=({label,color})=>(<div style={{padding:"4px 12px 3px",fontSize:9,color,textTransform:"uppercase",letterSpacing:"0.09em",background:"rgba(255,255,255,0.025)",borderBottom:"1px solid rgba(255,255,255,0.05)",position:"sticky",top:36}}>{label}</div>);
+  return(<div ref={ref} style={{position:"relative"}}>
+    <div onClick={()=>hasOpts&&setOpen(v=>!v)} style={{display:"flex",flexDirection:flip?"row-reverse":"row",alignItems:"center",gap:5,cursor:hasOpts?"pointer":"default",padding:"6px 8px",borderRadius:8,
+      border:"1px solid "+(open?accent:isK?accent+"66":"rgba(255,255,255,0.09)"),background:open?accent+"18":isK?accent+"0d":"rgba(255,255,255,0.03)",transition:"all 0.15s",userSelect:"none",minHeight:50}}>
+      <div style={{flex:1,textAlign:flip?"right":"left"}}>
+        <div style={{fontSize:12,fontWeight:600,color:isK?TEAM_CLR:"#f1f5f9",lineHeight:1.3}}>{player.name}</div>
+        <div style={{fontSize:10,color:"#64748b",marginTop:2,fontFamily:"monospace"}}>LK {player.lk.toFixed(1)} \u00b7 *{player.jg}</div>
+      </div>
+      {hasOpts&&<div style={{fontSize:10,color:open?accent:"#475569",transform:open?"rotate(180deg)":"none",transition:"transform 0.18s",lineHeight:1,flexShrink:0}}>&#x25be;</div>}
+    </div>
+    {open&&(<div style={{position:"absolute",top:"calc(100% + 4px)",left:flip?"auto":0,right:flip?0:"auto",zIndex:200,width:245,background:"#1e293b",border:"1px solid "+accent+"55",borderRadius:10,boxShadow:"0 12px 40px rgba(0,0,0,0.75)",maxHeight:320,overflowY:"auto"}}>
+      <div style={{padding:"7px 12px",fontSize:10,color:"#475569",textTransform:"uppercase",letterSpacing:"0.09em",borderBottom:"1px solid rgba(255,255,255,0.07)",background:"#1e293b",position:"sticky",top:0,zIndex:1}}>Spieler wechseln \u00b7 Rang {curRank}</div>
+      {better.length>0&&<><SL label="&#x2191; R&#xfc;ckg&#xe4;ngig (bessere LK)" color="#86efac"/>{better.map(Row)}</>}
+      {worse.length>0&&<><SL label="&#x2193; Ersatz (schlechtere LK)" color="#f87171"/>{worse.map(Row)}</>}
+    </div>)}
+  </div>);
+}
+
+function MatchRow({pos,lp,op,lpRoster,oppRoster,onLpSel,onOppSel,result,onResult,isAway}){
+  const prob=winProb(lp.lk,op.lk),col=pStyle(prob),wl=parseResult(result);
+  const isWO=/^wo$/i.test((result||'').trim()),wlLbl=wl==='W'?'SIEG':isWO?'NIED. WO':'NIED.';
+  const lP=isAway?op:lp,rP=isAway?lp:op,lR=isAway?oppRoster:lpRoster,rR=isAway?lpRoster:oppRoster;
+  const lS=isAway?onOppSel:onLpSel,rS=isAway?onLpSel:onOppSel,lA=isAway?"#64748b":AC,rA=isAway?AC:"#64748b";
+  return(<div style={{padding:"10px 10px 8px",borderBottom:"1px solid rgba(255,255,255,0.06)",background:pos%2===0?"rgba(255,255,255,0.015)":"transparent"}}>
+    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:7}}>
+      <div style={{width:22,height:22,borderRadius:"50%",background:"rgba(255,255,255,0.07)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:700,color:"#94a3b8",flexShrink:0}}>{pos}</div>
+      <div style={{flex:1,position:"relative",height:22}}>
+        <div style={{position:"absolute",inset:0,background:"rgba(255,255,255,0.04)",borderRadius:5}}>
+          <div style={{position:"absolute",left:0,top:0,bottom:0,width:prob+"%",background:col.bg,border:"1px solid "+col.bdr,borderRadius:5,transition:"width 0.35s ease"}}/>
+        </div>
+        <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:col.txt,fontFamily:"monospace",gap:5}}>
+          <span>{prob}%</span><span style={{fontWeight:400,fontSize:10,opacity:.85}}>{col.lbl}</span>
+        </div>
+      </div>
+      {wl&&<div style={{padding:"2px 7px",borderRadius:4,fontSize:10,fontWeight:700,flexShrink:0,background:wl==='W'?"#14532d":"#450a0a",color:wl==='W'?"#86efac":"#f87171",border:"1px solid "+(wl==='W'?"#166534":"#7f1d1d")}}>{wlLbl}</div>}
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:7,marginBottom:6}}>
+      <PlayerCell player={lP} roster={lR} onSelect={lS} flip={false} accent={lA}/>
+      <PlayerCell player={rP} roster={rR} onSelect={rS} flip={true} accent={rA}/>
+    </div>
+    <input type="text" value={result} onChange={e=>onResult(e.target.value)} placeholder="Ergebnis  z.B.  6:3  6:4  oder  WO"
+      style={{width:"100%",background:"rgba(255,255,255,0.05)",outline:"none",border:"1px solid "+(wl==='W'?"rgba(220,38,38,0.45)":wl==='L'?"rgba(220,38,38,0.45)":"rgba(255,255,255,0.11)"),borderRadius:6,color:"#e2e8f0",fontSize:11,padding:"4px 8px",fontFamily:"monospace",textAlign:"center"}}/>
+  </div>);
+}
+
+function DoublesRow({di,laudaPair,oppPair,laudaRoster,oppRoster,onLaudaChange,onOppChange,result,onResult,usedLauda,usedOpp,isAway}){
+  const aL=avgLK(laudaPair),aO=avgLK(oppPair),allSet=aL!==null&&aO!==null;
+  const prob=allSet?winProb(aL,aO):null,col=allSet?pStyle(prob):null;
+  const wl=parseResult(result),isWO=/^wo$/i.test((result||'').trim()),wlLbl=wl==='W'?'SIEG':isWO?'NIED. WO':'NIED.';
+  const lPair=isAway?oppPair:laudaPair,rPair=isAway?laudaPair:oppPair;
+  const lRoster=isAway?oppRoster:laudaRoster,rRoster=isAway?laudaRoster:oppRoster;
+  const lChange=isAway?onOppChange:onLaudaChange,rChange=isAway?onLaudaChange:onOppChange;
+  const lUsed=isAway?usedOpp:usedLauda,rUsed=isAway?usedLauda:usedOpp;
+  const lAcc=isAway?"#64748b":AC,rAcc=isAway?AC:"#64748b";
+  const uFor=(pair,used,pi)=>[pair[1-pi]?.name,...(used||[])].filter(Boolean);
+  return(<div style={{padding:"10px 10px 8px",borderBottom:"1px solid rgba(255,255,255,0.06)",background:di%2===0?"rgba(255,255,255,0.015)":"transparent"}}>
+    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+      <div style={{padding:"2px 8px",borderRadius:5,background:"rgba(255,255,255,0.07)",fontSize:10,fontWeight:700,color:"#94a3b8",flexShrink:0}}>D{di+1}</div>
+      {allSet?(<div style={{flex:1,position:"relative",height:22}}>
+        <div style={{position:"absolute",inset:0,background:"rgba(255,255,255,0.04)",borderRadius:5}}>
+          <div style={{position:"absolute",left:0,top:0,bottom:0,width:prob+"%",background:col.bg,border:"1px solid "+col.bdr,borderRadius:5,transition:"width 0.35s ease"}}/>
+        </div>
+        <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:col.txt,fontFamily:"monospace",gap:5}}>
+          <span>{prob}%</span><span style={{fontWeight:400,fontSize:10,opacity:.85}}>{col.lbl}</span>
+        </div>
+      </div>):(<div style={{flex:1,height:22,display:"flex",alignItems:"center",padding:"0 10px",borderRadius:5,border:"1px dashed rgba(255,255,255,0.1)",background:"rgba(255,255,255,0.02)"}}>
+        <span style={{fontSize:10,color:"#334155",fontStyle:"italic"}}>Doppelpartner w&#xe4;hlen &#x2026;</span>
+      </div>)}
+      {wl&&<div style={{padding:"2px 7px",borderRadius:4,fontSize:10,fontWeight:700,flexShrink:0,background:wl==='W'?"#14532d":"#450a0a",color:wl==='W'?"#86efac":"#f87171",border:"1px solid "+(wl==='W'?"#166534":"#7f1d1d")}}>{wlLbl}</div>}
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:7,marginBottom:6}}>
+      <div style={{display:"flex",flexDirection:"column",gap:4}}>
+        <PairMemberPicker player={lPair[0]} roster={lRoster} onSelect={p=>lChange(0,p)} flip={false} usedNames={uFor(lPair,lUsed,0)}/>
+        <PairMemberPicker player={lPair[1]} roster={lRoster} onSelect={p=>lChange(1,p)} flip={false} usedNames={uFor(lPair,lUsed,1)}/>
+      </div>
+      <div style={{display:"flex",flexDirection:"column",gap:4}}>
+        <PairMemberPicker player={rPair[0]} roster={rRoster} onSelect={p=>rChange(0,p)} flip={true} usedNames={uFor(rPair,rUsed,0)}/>
+        <PairMemberPicker player={rPair[1]} roster={rRoster} onSelect={p=>rChange(1,p)} flip={true} usedNames={uFor(rPair,rUsed,1)}/>
+      </div>
+    </div>
+    <input type="text" value={result} onChange={e=>onResult(e.target.value)} placeholder="Ergebnis  z.B.  6:3  6:4  oder  WO"
+      style={{width:"100%",background:"rgba(255,255,255,0.05)",outline:"none",border:"1px solid "+(wl==='W'?"rgba(220,38,38,0.45)":wl==='L'?"rgba(220,38,38,0.45)":"rgba(255,255,255,0.11)"),borderRadius:6,color:"#e2e8f0",fontSize:11,padding:"4px 8px",fontFamily:"monospace",textAlign:"center"}}/>
+  </div>);
+}
+
+function MatchView({opp,oppPlayers,rosterData,laudaL,oppL,onLaudaSel,onOppSel,results,onResult,notes,onNotes,dbl,dblResults,onLaudaDbl,onOppDbl,onDblResult,onReset,onPDF}){
+  const isAway=!opp.home;
+  const avg=Math.round(laudaL.map((p,i)=>winProb(p.lk,oppL[i].lk)).reduce((a,b)=>a+b)/NS);
+  const exp=laudaL.reduce((s,p,i)=>s+winProb(p.lk,oppL[i].lk)/100,0),col=pStyle(avg);
+  const sW=results.filter(r=>parseResult(r)==='W').length,sL=results.filter(r=>parseResult(r)==='L').length;
+  const dW=dblResults.filter(r=>parseResult(r)==='W').length,dL=dblResults.filter(r=>parseResult(r)==='L').length;
+  const tW=sW+dW,tL=sL+dL,today=isToday(opp.date);
+  const filledAvgs=dbl.pairs.map(avgLK).filter(a=>a!==null);
+  const orderWarn=filledAvgs.length===2&&filledAvgs[0]>filledAvgs[1];
+  const lLbl=isAway?opp.short:"TC RW Lauda",rLbl=isAway?"TC RW Lauda":opp.short;
+  const lClr=isAway?"#94a3b8":TEAM_CLR,rClr=isAway?TEAM_CLR:"#94a3b8";
+  const N=n=>n?.name||null;
+  const uL=[[N(dbl.pairs[1][0]),N(dbl.pairs[1][1])].filter(Boolean),[N(dbl.pairs[0][0]),N(dbl.pairs[0][1])].filter(Boolean)];
+  const uO=[[N(dbl.oppPairs[1][0]),N(dbl.oppPairs[1][1])].filter(Boolean),[N(dbl.oppPairs[0][0]),N(dbl.oppPairs[0][1])].filter(Boolean)];
+  const hasNeckarWarn=opp.short==='Neckargem\u00fcnd';
+  return(<div>
+    <div style={{background:"rgba(255,255,255,0.03)",borderRadius:10,padding:"12px 14px",marginBottom:10,border:"1px solid "+(today?"rgba(250,204,21,0.35)":"rgba(255,255,255,0.07)")}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+        <div>
+          <div style={{fontSize:10,color:today?"#facc15":"#64748b",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:3,fontWeight:today?700:400}}>
+            {opp.date} \u00b7 10:00 Uhr \u00b7 {opp.home?"Heim":"Ausw\u00e4rts"}
+            {today&&<span style={{marginLeft:6,background:"#facc15",color:"#111",padding:"1px 6px",borderRadius:3,fontWeight:800,fontSize:9}}>HEUTE</span>}
+          </div>
+          <div style={{fontSize:15,fontWeight:700,color:"#f1f5f9"}}>{opp.home?"vs. "+opp.short:"bei "+opp.short}</div>
+          {tW+tL>0&&(<div style={{fontSize:11,marginTop:4}}>
+            <span style={{color:"#64748b"}}>Gesamt: </span><span style={{color:"#86efac",fontWeight:700}}>{tW}</span><span style={{color:"#64748b"}}> : </span><span style={{color:"#f87171",fontWeight:700}}>{tL}</span>
+            <span style={{color:"#475569",fontSize:10}}> (E:{sW}:{sL} D:{dW}:{dL})</span>
+          </div>)}
+        </div>
+        <div style={{textAlign:"right"}}>
+          <div style={{fontSize:24,fontWeight:900,color:col.txt,fontFamily:"monospace",lineHeight:1}}>{avg}%</div>
+          <div style={{fontSize:10,color:"#64748b",marginTop:2}}>{exp.toFixed(1)} Pkt erw.</div>
+        </div>
+      </div>
+      {hasNeckarWarn&&<div style={{marginTop:8,padding:"5px 9px",borderRadius:6,background:"rgba(234,179,8,0.1)",border:"1px solid rgba(234,179,8,0.3)",fontSize:10,color:"#fde68a"}}>&#x26a0; Neckargem\u00fcnd: Spieler 4&#x2013;8 sind Platzhalter &#x2014; bitte im Kader-Editor aktuellen Kader eintragen.</div>}
+      <div style={{display:"flex",gap:6,marginTop:10}}>
+        <button onClick={onPDF} style={{flex:1,padding:"7px 10px",borderRadius:7,cursor:"pointer",background:"rgba(220,38,38,0.15)",border:"1px solid rgba(220,38,38,0.4)",color:"#fca5a5",fontSize:11,fontWeight:600}}>&#x2193; PDF Protokoll</button>
+        <button onClick={onReset} style={{padding:"7px 12px",borderRadius:7,cursor:"pointer",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.12)",color:"#94a3b8",fontSize:11}}>Reset</button>
+      </div>
+    </div>
+    <div style={{fontSize:10,color:"#475569",textTransform:"uppercase",letterSpacing:"0.09em",padding:"0 2px",marginBottom:5,display:"flex",justifyContent:"space-between"}}>
+      <span>Einzel</span>{sW+sL>0&&<span style={{fontFamily:"monospace"}}><span style={{color:"#86efac"}}>{sW}</span><span style={{color:"#475569"}}>:</span><span style={{color:"#f87171"}}>{sL}</span></span>}
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:7,padding:"0 10px 5px",fontSize:10,textTransform:"uppercase",letterSpacing:"0.08em"}}>
+      <div style={{color:lClr}}>{lLbl}</div><div style={{textAlign:"right",color:rClr}}>{rLbl}</div>
+    </div>
+    <div style={{borderRadius:10,border:"1px solid rgba(255,255,255,0.08)"}}>
+      {laudaL.map((lp,i)=>(<MatchRow key={i} pos={i+1} lp={lp} op={oppL[i]} lpRoster={rosterData} oppRoster={oppPlayers}
+        onLpSel={p=>onLaudaSel(i,p)} onOppSel={p=>onOppSel(i,p)} result={results[i]} onResult={v=>onResult(i,v)} isAway={isAway}/>))}
+    </div>
+    <div style={{marginTop:16}}>
+      <div style={{fontSize:10,color:"#475569",textTransform:"uppercase",letterSpacing:"0.09em",padding:"0 2px",marginBottom:5,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <div style={{display:"flex",alignItems:"center",gap:6}}>
+          <span>Doppel</span>
+          {orderWarn&&<span style={{background:"rgba(234,179,8,0.15)",border:"1px solid rgba(234,179,8,0.4)",color:"#fde68a",fontSize:9,padding:"1px 6px",borderRadius:4,fontWeight:600,textTransform:"none",letterSpacing:0}}>&#x26a0; Reihenfolge pr&#xfc;fen</span>}
+        </div>
+        {dW+dL>0&&<span style={{fontFamily:"monospace"}}><span style={{color:"#86efac"}}>{dW}</span><span style={{color:"#475569"}}>:</span><span style={{color:"#f87171"}}>{dL}</span></span>}
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:7,padding:"0 10px 5px",fontSize:10,textTransform:"uppercase",letterSpacing:"0.08em"}}>
+        <div style={{color:lClr}}>{lLbl}</div><div style={{textAlign:"right",color:rClr}}>{rLbl}</div>
+      </div>
+      <div style={{borderRadius:10,border:"1px solid rgba(255,255,255,0.08)"}}>
+        {[0,1].map(di=>(<DoublesRow key={di} di={di} laudaPair={dbl.pairs[di]} oppPair={dbl.oppPairs[di]}
+          laudaRoster={rosterData} oppRoster={oppPlayers}
+          onLaudaChange={(pi,p)=>onLaudaDbl(di,pi,p)} onOppChange={(pi,p)=>onOppDbl(di,pi,p)}
+          result={dblResults[di]} onResult={v=>onDblResult(di,v)}
+          usedLauda={uL[di]} usedOpp={uO[di]} isAway={isAway}/>))}
+      </div>
+      <div style={{fontSize:10,color:"#334155",marginTop:5,paddingLeft:3}}>&#x25be; Klick &#xf6;ffnet Auswahl \u00b7 bereits belegter Spieler ausgegraut</div>
+    </div>
+    <div style={{marginTop:14}}>
+      <div style={{fontSize:10,color:"#475569",textTransform:"uppercase",letterSpacing:"0.09em",marginBottom:5}}>Spielnotizen</div>
+      <textarea value={notes} onChange={e=>onNotes(e.target.value)} rows={3} placeholder="Notizen zu dieser Begegnung..."
+        style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.11)",borderRadius:8,color:"#e2e8f0",fontSize:12,padding:"8px 10px",outline:"none",lineHeight:1.5}}/>
+    </div>
+  </div>);
+}
+
+function App(){
+  const[active,setActive]=useState(initActive);
+  const[loaded,setLoaded]=useState(false);
+  const[states,setStates]=useState(()=>defStates());
+  const[results,setResults]=useState(()=>OPPONENTS.map(()=>Array(NS).fill("")));
+  const[notes,setNotes]=useState(()=>OPPONENTS.map(()=>""));
+  const[doubles,setDoubles]=useState(defDoubles);
+  const[dblResults,setDR]=useState(()=>OPPONENTS.map(()=>["",""]));
+  const[rosterData,setRosterData]=useState(()=>LAUDA_ROSTER_DEFAULT.map(p=>({...p})));
+  const[oppPlayerData,setOppPlayerData]=useState(()=>OPP_PLAYERS_DEFAULT.map(a=>a.map(p=>({...p}))));
+  const[editOpen,setEditOpen]=useState(false);
+
+  useEffect(()=>{loadAll().then(d=>{setStates(d.states);setResults(d.results);setNotes(d.notes);setDoubles(d.doubles);setDR(d.doublesResults);setRosterData(d.rosterData);setOppPlayerData(d.oppPlayerData);setLoaded(true);});},[]);
+  useEffect(()=>{if(!loaded)return;saveAll(SK.L,states.map(s=>({lauda:s.lauda.map(p=>p.name),opp:s.opp.map(p=>p.name)})));},[states,loaded]);
+  useEffect(()=>{if(!loaded)return;saveAll(SK.R,results);},[results,loaded]);
+  useEffect(()=>{if(!loaded)return;saveAll(SK.N,notes);},[notes,loaded]);
+  useEffect(()=>{if(!loaded)return;saveAll(SK.D,doubles.map(d=>({pairs:d.pairs.map(pr=>pr.map(p=>p?.name??null)),oppPairs:d.oppPairs.map(pr=>pr.map(p=>p?.name??null))})));},[doubles,loaded]);
+  useEffect(()=>{if(!loaded)return;saveAll(SK.DR,dblResults);},[dblResults,loaded]);
+  useEffect(()=>{if(!loaded)return;saveAll(SK.CR,rosterData);},[rosterData,loaded]);
+  useEffect(()=>{if(!loaded)return;saveAll(SK.CO,oppPlayerData);},[oppPlayerData,loaded]);
+
+  const setLauda=(mi,ri,p)=>setStates(prev=>{const n=prev.map(s=>({lauda:[...s.lauda],opp:[...s.opp]}));n[mi].lauda[ri]=p;return n;});
+  const setOpp_=(mi,ri,p)=>setStates(prev=>{const n=prev.map(s=>({lauda:[...s.lauda],opp:[...s.opp]}));n[mi].opp[ri]=p;return n;});
+  const setResult=(mi,ri,v)=>setResults(prev=>{const n=prev.map(r=>[...r]);n[mi][ri]=v;return n;});
+  const setNote=(mi,v)=>setNotes(prev=>{const n=[...prev];n[mi]=v;return n;});
+  const setLaudaDbl=(mi,di,pi,p)=>setDoubles(prev=>{const n=prev.map(d=>({pairs:d.pairs.map(pr=>[...pr]),oppPairs:d.oppPairs.map(pr=>[...pr])}));n[mi].pairs[di][pi]=p;return n;});
+  const setOppDbl=(mi,di,pi,p)=>setDoubles(prev=>{const n=prev.map(d=>({pairs:d.pairs.map(pr=>[...pr]),oppPairs:d.oppPairs.map(pr=>[...pr])}));n[mi].oppPairs[di][pi]=p;return n;});
+  const setDblR=(mi,di,v)=>setDR(prev=>{const n=prev.map(r=>[...r]);n[mi][di]=v;return n;});
+  const resetMatch=mi=>{
+    setStates(prev=>{const n=[...prev];n[mi]={lauda:byLK(rosterData).slice(0,NS),opp:byLK(oppPlayerData[mi]).slice(0,NS)};return n;});
+    setDoubles(prev=>{const n=[...prev];n[mi]={pairs:emptyPairs(),oppPairs:emptyPairs()};return n;});
+    setDR(prev=>{const n=[...prev];n[mi]=["",""];return n;});
+  };
+
+  if(!loaded)return(<div style={{minHeight:"100vh",background:"#0a0f1e",display:"flex",alignItems:"center",justifyContent:"center"}}><div style={{color:"#64748b",fontSize:13}}>Lade gespeicherte Daten &#x2026;</div></div>);
+
+  return(<div style={{minHeight:"100vh",background:"#0a0f1e",color:"#e2e8f0",fontFamily:"'Segoe UI',sans-serif",maxWidth:680,margin:"0 auto",paddingBottom:48}}>
+    {editOpen&&<EditModal onClose={()=>setEditOpen(false)} rosterData={rosterData} setRosterData={setRosterData} oppPlayerData={oppPlayerData} setOppPlayerData={setOppPlayerData}/>}
+    <div style={{padding:"18px 16px 14px",borderBottom:"1px solid rgba(255,255,255,0.07)",background:"linear-gradient(180deg,rgba(220,38,38,.10) 0%,transparent 100%)"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+        <div>
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+            <div style={{width:9,height:9,borderRadius:"50%",background:AC,boxShadow:"0 0 8px "+AC}}/>
+            <span style={{fontSize:10,color:"#64748b",textTransform:"uppercase",letterSpacing:"0.12em"}}>BTV \u00b7 Baden Sommer 2026 \u00b7 Bezirksliga Gr. 165</span>
+          </div>
+          <div style={{fontSize:20,fontWeight:800,color:"#f8fafc",letterSpacing:"-0.02em"}}>TC RW Lauda &#x2014; Begegnungsanalyse</div>
+          <div style={{fontSize:12,color:"#64748b",marginTop:3}}>Herren 70 \u00b7 4 Einzel + 2 Doppel \u00b7 Automatisch gespeichert</div>
+        </div>
+        <button onClick={()=>setEditOpen(true)} style={{marginTop:4,padding:"6px 11px",borderRadius:7,cursor:"pointer",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.14)",color:"#94a3b8",fontSize:12,flexShrink:0}}>&#x270e; Kader</button>
+      </div>
+    </div>
+    <div style={{display:"flex",overflowX:"auto",gap:6,padding:"10px 16px",borderBottom:"1px solid rgba(255,255,255,0.07)",scrollbarWidth:"none"}}>
+      {OPPONENTS.map((opp,i)=>{
+        const s=states[i],sAvg=Math.round(s.lauda.map((p,j)=>winProb(p.lk,s.opp[j].lk)).reduce((a,b)=>a+b)/NS),col=pStyle(sAvg);
+        const on=active===i,today=isToday(opp.date);
+        const sW=results[i].filter(r=>parseResult(r)==='W').length,sL=results[i].filter(r=>parseResult(r)==='L').length;
+        const dW=dblResults[i].filter(r=>parseResult(r)==='W').length,dL=dblResults[i].filter(r=>parseResult(r)==='L').length;
+        const tW=sW+dW,tL=sL+dL,played=tW+tL;
+        return(<button key={i} onClick={()=>setActive(i)} style={{flexShrink:0,cursor:"pointer",textAlign:"left",padding:"7px 12px",borderRadius:8,
+          background:on?"rgba(220,38,38,.18)":today?"rgba(250,204,21,0.07)":"rgba(255,255,255,.04)",
+          border:on?"1px solid rgba(220,38,38,.5)":today?"1px solid rgba(250,204,21,0.4)":"1px solid rgba(255,255,255,.09)",transition:"all .15s"}}>
+          <div style={{fontSize:10,color:today?"#facc15":"#64748b",marginBottom:2,fontWeight:today?700:400}}>{opp.date}{today?" \u00b7 HEUTE":""}</div>
+          <div style={{fontSize:12,fontWeight:600,color:on?"#f1f5f9":"#94a3b8"}}>{opp.short}</div>
+          <div style={{display:"flex",alignItems:"center",gap:5,marginTop:1}}>
+            <div style={{fontSize:12,fontWeight:700,color:col.txt,fontFamily:"monospace"}}>{sAvg}%</div>
+            {played>0&&<div style={{fontSize:10,fontFamily:"monospace"}}><span style={{color:"#86efac"}}>{tW}</span><span style={{color:"#475569"}}>:</span><span style={{color:"#f87171"}}>{tL}</span></div>}
+          </div>
+        </button>);
+      })}
+    </div>
+    <div style={{padding:"14px 16px"}}>
+      <MatchView opp={OPPONENTS[active]} oppPlayers={oppPlayerData[active]} rosterData={rosterData}
+        laudaL={states[active].lauda} oppL={states[active].opp}
+        onLaudaSel={(ri,p)=>setLauda(active,ri,p)} onOppSel={(ri,p)=>setOpp_(active,ri,p)}
+        results={results[active]} onResult={(ri,v)=>setResult(active,ri,v)}
+        notes={notes[active]} onNotes={v=>setNote(active,v)}
+        dbl={doubles[active]} dblResults={dblResults[active]}
+        onLaudaDbl={(di,pi,p)=>setLaudaDbl(active,di,pi,p)} onOppDbl={(di,pi,p)=>setOppDbl(active,di,pi,p)}
+        onDblResult={(di,v)=>setDblR(active,di,v)}
+        onReset={()=>resetMatch(active)}
+        onPDF={()=>generatePDF(OPPONENTS[active],states[active].lauda,states[active].opp,results[active],notes[active],doubles[active],dblResults[active])}/>
+    </div>
+    <div style={{padding:"0 16px"}}>
+      <div style={{fontSize:10,color:"#475569",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:8}}>Saison&#xfc;bersicht</div>
+      <div style={{borderRadius:10,border:"1px solid rgba(255,255,255,0.08)"}}>
+        {OPPONENTS.map((opp,i)=>{
+          const s=states[i],probs=s.lauda.map((p,j)=>winProb(p.lk,s.opp[j].lk));
+          const avg=Math.round(probs.reduce((a,b)=>a+b)/NS),exp=probs.reduce((s,p)=>s+p/100,0),col=pStyle(avg),today=isToday(opp.date);
+          const sW=results[i].filter(r=>parseResult(r)==='W').length,sL=results[i].filter(r=>parseResult(r)==='L').length;
+          const dW=dblResults[i].filter(r=>parseResult(r)==='W').length,dL=dblResults[i].filter(r=>parseResult(r)==='L').length;
+          const tW=sW+dW,tL=sL+dL,played=tW+tL;
+          return(<div key={i} onClick={()=>setActive(i)} style={{display:"grid",gridTemplateColumns:"1fr auto auto",gap:8,alignItems:"center",padding:"10px 14px",cursor:"pointer",borderBottom:i<OPPONENTS.length-1?"1px solid rgba(255,255,255,0.06)":"none",background:active===i?"rgba(220,38,38,.07)":today?"rgba(250,204,21,0.04)":"transparent"}}>
+            <div>
+              <div style={{fontSize:11,color:today?"#facc15":"#64748b",marginBottom:2}}>{opp.date} \u00b7 {opp.home?"Heim":"Ausw."}{today?" \u00b7 HEUTE":""}</div>
+              <div style={{fontSize:13,fontWeight:600,color:"#e2e8f0"}}>{opp.name}</div>
+            </div>
+            {played>0?(<div style={{fontFamily:"monospace",fontWeight:700,fontSize:14,textAlign:"right"}}>
+              <span style={{color:"#86efac"}}>{tW}</span><span style={{color:"#475569"}}>:</span><span style={{color:"#f87171"}}>{tL}</span>
+              <div style={{fontSize:9,color:"#475569",fontWeight:400}}>E:{sW}:{sL} D:{dW}:{dL}</div>
+            </div>):(<div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{exp.toFixed(1)} erw.</div>)}
+            <div style={{background:col.bg,border:"1px solid "+col.bdr,borderRadius:6,padding:"4px 8px",fontSize:13,fontWeight:800,color:col.txt,fontFamily:"monospace",minWidth:44,textAlign:"center"}}>{avg}%</div>
+          </div>);
+        })}
+      </div>
+      <div style={{fontSize:10,color:"#334155",marginTop:10,textAlign:"center"}}>Badischer Tennisverband \u00b7 Baden Sommer 2026 \u00b7 Bezirksliga Gr. 165</div>
+    </div>
+  </div>);
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
